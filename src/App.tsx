@@ -33,7 +33,7 @@ fontWeight: "bold",
 cursor: "pointer",
 border: "none"
 }}
-onClick={() => navigate("/admin-panel")}
+onClick={() => navigate("/admin-streams")
 >
 ADMIN ACCESS
 </button>

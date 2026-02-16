@@ -14,7 +14,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminScanner from "./pages/AdminScanner";
 
 const queryClient = new QueryClient();
-
 const AdminAccessButton = () => {
   const navigate = useNavigate();
   return (
@@ -32,13 +31,14 @@ const AdminAccessButton = () => {
         fontWeight: "bold",
         cursor: "pointer",
         border: "none",
+        boxShadow: "0px 4px 10px rgba(0,0,0,0.3)"
       }}
       onClick={() => navigate("/admin-streams")}
     >
       ADMIN ACCESS
     </button>
   );
-};
+}
 
 const App = () => {
 useEffect(() => {

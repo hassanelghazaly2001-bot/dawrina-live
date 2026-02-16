@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { t } from "@/lib/i18n";
 import type { Match } from "@/data/matches";
 import { Star } from "lucide-react";
+import { supabase } from "@/lib/supabase";
  
 
 const AdminDashboard = () => {
@@ -276,7 +277,46 @@ const AdminDashboard = () => {
     setMetas((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { tvChannel: "", commentator: "", stadium: "" }), [key]: value } }));
   }
 
-  function addNewMatch(e: React.FormEvent<HTMLFormElement>) {
+  async function handleAddMatch(match: Match) {
+    const row = {
+      id: match.id,
+      home_team: match.homeTeam,
+      away_team: match.awayTeam,
+      league: match.league,
+      date: match.date ?? null,
+      time: match.time,
+      status: match.status,
+      channel_slug: match.channelSlug ?? null,
+      backup_iframe: match.backupIframe ?? null,
+      player_server: match.playerServer ?? null,
+      home_logo: match.homeLogo ?? null,
+      away_logo: match.awayLogo ?? null,
+      tv_channel: match.tvChannel ?? null,
+      commentator: match.commentator ?? null,
+      stadium: match.stadium ?? null,
+    };
+    let { error } = await supabase.from("matches").insert(row);
+    if (error) {
+      const minimal = {
+        id: match.id,
+        home_team: match.homeTeam,
+        away_team: match.awayTeam,
+        league: match.league,
+        date: match.date ?? null,
+        time: match.time,
+        status: match.status,
+      };
+      const retry = await supabase.from("matches").insert(minimal);
+      if (retry.error) {
+        setStatus(retry.error.message || "تعذر حفظ المباراة في Supabase");
+        return false;
+      }
+    }
+    setStatus("تم حفظ المباراة في Supabase");
+    return true;
+  }
+
+  async function addNewMatch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const homeTeam = String(fd.get("homeTeam") ?? "").trim();
@@ -328,6 +368,7 @@ const AdminDashboard = () => {
       homeLogo: (String(fd.get("homeLogo") ?? "").trim() || undefined),
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
     };
+    await handleAddMatch(match);
     const listRaw = window.localStorage.getItem("custom-matches");
     const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
     const baseList = edited ? list.filter((m) => m.id !== edited) : list.filter((m) => m.id !== newId);

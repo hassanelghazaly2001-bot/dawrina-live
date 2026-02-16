@@ -1014,14 +1014,40 @@ const AdminDashboard = () => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const title = String(fd.get("title") ?? "").trim();
+                const type = String(fd.get("ad_type") ?? "image") as "image" | "id" | "script";
+                const placement = String(fd.get("placement") ?? "header") as "header" | "sidebar" | "inline";
                 const image_url = String(fd.get("image_url") ?? "").trim();
                 const link_url = String(fd.get("link_url") ?? "").trim();
-                const position = String(fd.get("position") ?? "").trim();
+                const ad_id_raw = String(fd.get("ad_id") ?? "").trim();
+                const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
+                const script = String(fd.get("ad_script") ?? "").trim();
                 const active = String(fd.get("active") ?? "false") === "on";
                 (async () => {
-                  const { data, error } = await supabase.from("ads").insert({ title: title || null, image_url: image_url || null, link_url: link_url || null, position: position || null, active }).select("*").single();
+                  const payload = {
+                    title: title || null,
+                    type,
+                    placement,
+                    image_url: type === "image" ? (image_url || null) : null,
+                    link_url: type === "image" ? (link_url || null) : null,
+                    ad_id: type === "id" ? (ad_id ?? null) : null,
+                    script: type === "script" ? (script || null) : null,
+                    position: placement,
+                    active,
+                  };
+                  const { data, error } = await supabase.from("ads").insert(payload).select("*").single();
                   if (!error && data) {
-                    setAds((prev) => [...prev, { id: String(data.id), title: data.title, image_url: data.image_url, link_url: data.link_url, position: data.position, active: !!data.active }]);
+                    setAds((prev) => [...prev, {
+                      id: String(data.id),
+                      title: data.title,
+                      image_url: data.image_url,
+                      link_url: data.link_url,
+                      position: data.position,
+                      active: !!data.active,
+                      type: data.type,
+                      ad_id: data.ad_id,
+                      script: data.script,
+                      placement: data.placement,
+                    }]);
                     setShowAdForm(false);
                     setStatus("تم حفظ الإعلان");
                   } else {
@@ -1030,9 +1056,20 @@ const AdminDashboard = () => {
                 })().catch(() => setStatus("تعذر حفظ الإعلان"));
               }} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <input name="title" className="rounded-md border bg-card p-2 text-sm" placeholder="عنوان الإعلان" />
+                <select name="ad_type" className="rounded-md border bg-card p-2 text-sm" defaultValue="image">
+                  <option value="image">صورة + رابط</option>
+                  <option value="id">معرّف إعلان (رقمي)</option>
+                  <option value="script">كود مخصص (HTML/JS)</option>
+                </select>
+                <select name="placement" className="rounded-md border bg-card p-2 text-sm" defaultValue="header">
+                  <option value="header">Header</option>
+                  <option value="sidebar">Sidebar</option>
+                  <option value="inline">Inline</option>
+                </select>
                 <input name="image_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط صورة الإعلان" />
                 <input name="link_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط التحويل عند الضغط" />
-                <input name="position" className="rounded-md border bg-card p-2 text-sm" placeholder="المكان (header, sidebar, inline)" />
+                <input name="ad_id" className="rounded-md border bg-card p-2 text-sm" placeholder="معرّف الإعلان (رقمي)" />
+                <textarea name="ad_script" className="rounded-md border bg-card p-2 text-sm" placeholder="كود HTML/JS" rows={4} />
                 <label className="inline-flex items-center gap-2 text-sm">
                   <input type="checkbox" name="active" />
                   فعال
@@ -1054,9 +1091,12 @@ const AdminDashboard = () => {
                   <thead>
                     <tr className="text-muted-foreground">
                       <th className="p-2 text-start">العنوان</th>
+                      <th className="p-2 text-start">النوع</th>
+                      <th className="p-2 text-start">المكان</th>
                       <th className="p-2 text-start">الصورة</th>
                       <th className="p-2 text-start">الرابط</th>
-                      <th className="p-2 text-start">المكان</th>
+                      <th className="p-2 text-start">معرّف</th>
+                      <th className="p-2 text-start">كود</th>
                       <th className="p-2 text-start">فعّال</th>
                       <th className="p-2 text-start">إجراءات</th>
                     </tr>
@@ -1068,13 +1108,46 @@ const AdminDashboard = () => {
                           <input name="ad_title" data-id={a.id} defaultValue={a.title ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
                         </td>
                         <td className="p-2">
-                          <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          <select
+                            className="rounded-md border bg-card p-2 text-sm"
+                            defaultValue={a.type ?? "image"}
+                            onChange={(e) => setAdTypesMap((prev) => ({ ...prev, [a.id]: (e.target.value as "image" | "id" | "script") ?? "image" }))}
+                          >
+                            <option value="image">صورة + رابط</option>
+                            <option value="id">معرّف إعلان (رقمي)</option>
+                            <option value="script">كود مخصص</option>
+                          </select>
                         </td>
                         <td className="p-2">
-                          <input name="ad_link_url" data-id={a.id} defaultValue={a.link_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          <select
+                            className="rounded-md border bg-card p-2 text-sm"
+                            defaultValue={a.placement ?? a.position ?? "header"}
+                            onChange={(e) => setAdPlacementsMap((prev) => ({ ...prev, [a.id]: (e.target.value as "header" | "sidebar" | "inline") ?? "header" }))}
+                          >
+                            <option value="header">Header</option>
+                            <option value="sidebar">Sidebar</option>
+                            <option value="inline">Inline</option>
+                          </select>
                         </td>
                         <td className="p-2">
-                          <input name="ad_position" data-id={a.id} defaultValue={a.position ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          {(adTypesMap[a.id] ?? a.type ?? "image") === "image" && (
+                            <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {(adTypesMap[a.id] ?? a.type ?? "image") === "image" && (
+                            <input name="ad_link_url" data-id={a.id} defaultValue={a.link_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {(adTypesMap[a.id] ?? a.type ?? "image") === "id" && (
+                            <input name="ad_ad_id" data-id={a.id} defaultValue={a.ad_id ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                          )}
+                        </td>
+                        <td className="p-2">
+                          {(adTypesMap[a.id] ?? a.type ?? "image") === "script" && (
+                            <textarea name="ad_script" data-id={a.id} defaultValue={a.script ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" rows={3} />
+                          )}
                         </td>
                         <td className="p-2">
                           <input type="checkbox" name="ad_active" data-id={a.id} defaultChecked={!!a.active} />
@@ -1088,14 +1161,29 @@ const AdminDashboard = () => {
                                 const getVal = (name: string) => (document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.value ?? "").trim();
                                 const getChecked = (name: string) => !!document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.checked;
                                 const title = getVal("ad_title");
+                                const type = adTypesMap[a.id] ?? a.type ?? "image";
+                                const placement = adPlacementsMap[a.id] ?? a.placement ?? "header";
                                 const image_url = getVal("ad_image_url");
                                 const link_url = getVal("ad_link_url");
-                                const position = getVal("ad_position");
+                                const ad_id_raw = getVal("ad_ad_id");
+                                const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
+                                const script = (document.querySelector<HTMLTextAreaElement>(`[name="ad_script"][data-id="${a.id}"]`)?.value ?? "").trim();
                                 const active = getChecked("ad_active");
                                 (async () => {
-                                  const { error } = await supabase.from("ads").update({ title: title || null, image_url: image_url || null, link_url: link_url || null, position: position || null, active }).eq("id", a.id);
+                                  const payload = {
+                                    title: title || null,
+                                    type,
+                                    placement,
+                                    image_url: type === "image" ? (image_url || null) : null,
+                                    link_url: type === "image" ? (link_url || null) : null,
+                                    ad_id: type === "id" ? (ad_id ?? null) : null,
+                                    script: type === "script" ? (script || null) : null,
+                                    position: placement,
+                                    active,
+                                  };
+                                  const { error } = await supabase.from("ads").update(payload).eq("id", a.id);
                                   if (!error) {
-                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, position, active } : x)));
+                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, ad_id, script, placement, type, position: placement, active } : x)));
                                     setStatus("تم حفظ الإعلان");
                                   } else {
                                     setStatus(error.message || "تعذر حفظ الإعلان");

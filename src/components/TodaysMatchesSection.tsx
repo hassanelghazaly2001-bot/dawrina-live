@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import type { Match } from "@/data/matches";
 import { CalendarDays, AlertCircle, Loader2 } from "lucide-react";
 import { FeaturedMatchCard } from "@/components/FeaturedMatchCard";
+import { supabase } from "@/lib/supabase";
 
 type DateTab = "yesterday" | "today" | "tomorrow";
 
@@ -208,6 +209,7 @@ export function TodaysMatchesSection() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; script?: string; active?: boolean }[]>([]);
 
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
   const todayISO = useMemo(() => {
@@ -243,6 +245,26 @@ export function TodaysMatchesSection() {
       .finally(() => {
         setIsLoading(false);
       });
+    (async () => {
+      const { data } = await supabase.from("ads").select("*").eq("active", true).eq("placement", "sidebar");
+      if (Array.isArray(data)) {
+        setAdsSidebar(
+          data.map((raw: unknown) => {
+            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; script?: string; active?: boolean };
+            return {
+              id: String(a.id),
+              title: a.title,
+              type: a.type,
+              image_url: a.image_url,
+              link_url: a.link_url,
+              ad_id: a.ad_id,
+              script: a.script,
+              active: !!a.active,
+            };
+          })
+        );
+      }
+    })().catch(() => void 0);
   }, []);
 
   useEffect(() => {
@@ -399,6 +421,23 @@ export function TodaysMatchesSection() {
                 watchHref={`/match/${bigMatch.id}`}
               />
             )}
+            {adsSidebar.map((a) => (
+              <div key={a.id} className="rounded-xl border border-border bg-card/40 p-3">
+                {a.type === "image" && a.image_url ? (
+                  a.link_url ? (
+                    <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">
+                      <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
+                    </a>
+                  ) : (
+                    <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
+                  )
+                ) : a.type === "id" && a.ad_id ? (
+                  <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
+                ) : a.type === "script" && a.script ? (
+                  <div dangerouslySetInnerHTML={{ __html: a.script }} />
+                ) : null}
+              </div>
+            ))}
           </aside>
 
           {/* Main center column: vertical matches list */}

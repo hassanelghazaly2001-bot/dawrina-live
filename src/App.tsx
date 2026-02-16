@@ -17,7 +17,10 @@ const AdminAccessButton = () => {
   return (
     <button
       type="button"
-      onClick={() => navigate("/admin-streams")}
+      onClick={() => {
+        console.log("ADMIN_ACCESS_CLICK");
+        navigate("/admin");
+      }}
       style={{
         position: "fixed",
         bottom: "20px",

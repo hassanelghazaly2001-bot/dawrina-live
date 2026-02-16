@@ -22,6 +22,9 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState<"today" | "tomorrow">("today");
   const [adminChannelFilter, setAdminChannelFilter] = useState<"all" | "bein" | "ssc" | "others">("all");
   const [selectedServer, setSelectedServer] = useState<"panda" | "starz">("panda");
+  const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; position?: string; active?: boolean }[]>([]);
+  const [showAdForm, setShowAdForm] = useState(false);
+  const adFormRef = useRef<HTMLFormElement | null>(null);
   const PANDA_SLUGS = [
     ...Array.from({ length: 10 }, (_, i) => `bein-${i + 1}`),
     ...Array.from({ length: 8 }, (_, i) => `ssc-${i + 1}`),
@@ -158,6 +161,26 @@ const AdminDashboard = () => {
     };
   }, [authed]);
   useEffect(() => {
+    async function loadAds() {
+      const { data, error } = await supabase.from("ads").select("*");
+      if (!error && Array.isArray(data)) {
+        setAds(
+          data.map((a: { id: string; title?: string; image_url?: string; link_url?: string; position?: string; active?: boolean }) => ({
+            id: String(a.id),
+            title: a.title,
+            image_url: a.image_url,
+            link_url: a.link_url,
+            position: a.position,
+            active: !!a.active,
+          }))
+        );
+      }
+    }
+    if (authed) {
+      void loadAds();
+    }
+  }, [authed]);
+  useEffect(() => {
     function onScannerPaste(e: Event) {
       const detail = (e as CustomEvent<string>).detail as string | undefined;
       const slug = detail ?? window.localStorage.getItem("scanner-last-slug") ?? "";
@@ -238,6 +261,28 @@ const AdminDashboard = () => {
     const stadium = getVal("stadium");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
     const streams = [stream1, stream2].filter((s) => s.length > 0);
+    (async () => {
+      const row = {
+        home_team: homeTeam || null,
+        away_team: awayTeam || null,
+        league: league || null,
+        date: date || null,
+        time: time || null,
+        status: statusVal || null,
+        channel_slug: channelSlug || null,
+        backup_iframe: backupIframe || null,
+        player_server: playerServer || null,
+        home_logo: homeLogo || null,
+        away_logo: awayLogo || null,
+        tv_channel: tvChannel || null,
+        commentator: commentator || null,
+        stadium: stadium || null,
+      };
+      const { error } = await supabase.from("matches").update(row).eq("id", id);
+      if (error) {
+        await supabase.from("matches").update({ home_team: homeTeam || null, away_team: awayTeam || null, league: league || null, time: time || null, status: statusVal || null }).eq("id", id);
+      }
+    })().catch(() => void 0);
     window.localStorage.setItem(`match-streams:${id}`, JSON.stringify(streams));
     window.localStorage.setItem(`match-status:${id}`, statusVal || "upcoming");
     window.localStorage.setItem(
@@ -295,7 +340,7 @@ const AdminDashboard = () => {
       commentator: match.commentator ?? null,
       stadium: match.stadium ?? null,
     };
-    let { error } = await supabase.from("matches").insert(row);
+    const { error } = await supabase.from("matches").insert(row);
     if (error) {
       const minimal = {
         id: match.id,
@@ -412,6 +457,9 @@ const AdminDashboard = () => {
   }
 
   function deleteMatch(id: string) {
+    (async () => {
+      await supabase.from("matches").delete().eq("id", id);
+    })().catch(() => void 0);
     const listRaw = window.localStorage.getItem("custom-matches");
     const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
     const remaining = list.filter((m) => m.id !== id);
@@ -946,6 +994,139 @@ const AdminDashboard = () => {
                 })()}
               </>
             )}
+          </div>
+          <div className="mt-6 rounded-xl border border-border bg-card/40 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-foreground">إدارة الإعلانات</h2>
+              <button
+                type="button"
+                onClick={() => setShowAdForm((s) => !s)}
+                className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+              >
+                إضافة إعلان جديد
+              </button>
+            </div>
+            {showAdForm && (
+              <form ref={adFormRef} onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                const title = String(fd.get("title") ?? "").trim();
+                const image_url = String(fd.get("image_url") ?? "").trim();
+                const link_url = String(fd.get("link_url") ?? "").trim();
+                const position = String(fd.get("position") ?? "").trim();
+                const active = String(fd.get("active") ?? "false") === "on";
+                (async () => {
+                  const { data, error } = await supabase.from("ads").insert({ title: title || null, image_url: image_url || null, link_url: link_url || null, position: position || null, active }).select("*").single();
+                  if (!error && data) {
+                    setAds((prev) => [...prev, { id: String(data.id), title: data.title, image_url: data.image_url, link_url: data.link_url, position: data.position, active: !!data.active }]);
+                    setShowAdForm(false);
+                    setStatus("تم حفظ الإعلان");
+                  } else {
+                    setStatus(error?.message || "تعذر حفظ الإعلان");
+                  }
+                })().catch(() => setStatus("تعذر حفظ الإعلان"));
+              }} className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <input name="title" className="rounded-md border bg-card p-2 text-sm" placeholder="عنوان الإعلان" />
+                <input name="image_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط صورة الإعلان" />
+                <input name="link_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط التحويل عند الضغط" />
+                <input name="position" className="rounded-md border bg-card p-2 text-sm" placeholder="المكان (header, sidebar, inline)" />
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" name="active" />
+                  فعال
+                </label>
+                <div className="col-span-full">
+                  <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
+                    حفظ الإعلان
+                  </button>
+                </div>
+              </form>
+            )}
+            <div className="overflow-x-auto">
+              {ads.length === 0 ? (
+                <div className="rounded-xl border border-border bg-card/60 p-6 text-center text-sm text-muted-foreground">
+                  لا توجد إعلانات حالياً
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground">
+                      <th className="p-2 text-start">العنوان</th>
+                      <th className="p-2 text-start">الصورة</th>
+                      <th className="p-2 text-start">الرابط</th>
+                      <th className="p-2 text-start">المكان</th>
+                      <th className="p-2 text-start">فعّال</th>
+                      <th className="p-2 text-start">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ads.map((a) => (
+                      <tr key={a.id} className="border-t border-border">
+                        <td className="p-2">
+                          <input name="ad_title" data-id={a.id} defaultValue={a.title ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                        </td>
+                        <td className="p-2">
+                          <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                        </td>
+                        <td className="p-2">
+                          <input name="ad_link_url" data-id={a.id} defaultValue={a.link_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                        </td>
+                        <td className="p-2">
+                          <input name="ad_position" data-id={a.id} defaultValue={a.position ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                        </td>
+                        <td className="p-2">
+                          <input type="checkbox" name="ad_active" data-id={a.id} defaultChecked={!!a.active} />
+                        </td>
+                        <td className="p-2">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                              onClick={() => {
+                                const getVal = (name: string) => (document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.value ?? "").trim();
+                                const getChecked = (name: string) => !!document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.checked;
+                                const title = getVal("ad_title");
+                                const image_url = getVal("ad_image_url");
+                                const link_url = getVal("ad_link_url");
+                                const position = getVal("ad_position");
+                                const active = getChecked("ad_active");
+                                (async () => {
+                                  const { error } = await supabase.from("ads").update({ title: title || null, image_url: image_url || null, link_url: link_url || null, position: position || null, active }).eq("id", a.id);
+                                  if (!error) {
+                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, position, active } : x)));
+                                    setStatus("تم حفظ الإعلان");
+                                  } else {
+                                    setStatus(error.message || "تعذر حفظ الإعلان");
+                                  }
+                                })().catch(() => setStatus("تعذر حفظ الإعلان"));
+                              }}
+                            >
+                              حفظ
+                            </button>
+                            <button
+                              type="button"
+                              className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+                              onClick={() => {
+                                (async () => {
+                                  const { error } = await supabase.from("ads").delete().eq("id", a.id);
+                                  if (!error) {
+                                    setAds((prev) => prev.filter((x) => x.id !== a.id));
+                                    setStatus("تم حذف الإعلان");
+                                  } else {
+                                    setStatus(error.message || "تعذر حذف الإعلان");
+                                  }
+                                })().catch(() => setStatus("تعذر حذف الإعلان"));
+                              }}
+                            >
+                              حذف
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
           {status && <p className="mt-3 text-sm text-muted-foreground">{status}</p>}
         </div>

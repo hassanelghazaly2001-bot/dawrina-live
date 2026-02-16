@@ -16,28 +16,28 @@ import AdminScanner from "./pages/AdminScanner";
 const queryClient = new QueryClient();
 
 const AdminAccessButton = () => {
-const navigate = useNavigate();
-return (
-<button
-type="button"
-style={{
-position: "fixed",
-bottom: "20px",
-right: "20px",
-zIndex: 9999,
-background: "red",
-color: "white",
-padding: "15px",
-borderRadius: "8px",
-fontWeight: "bold",
-cursor: "pointer",
-border: "none"
-}}
-onClick={() => navigate("/admin-streams")
->
-ADMIN ACCESS
-</button>
-);
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      style={{
+        position: "fixed",
+        bottom: "20px",
+        right: "20px",
+        zIndex: 9999,
+        background: "red",
+        color: "white",
+        padding: "15px",
+        borderRadius: "8px",
+        fontWeight: "bold",
+        cursor: "pointer",
+        border: "none",
+      }}
+      onClick={() => navigate("/admin-streams")}
+    >
+      ADMIN ACCESS
+    </button>
+  );
 };
 
 const App = () => {

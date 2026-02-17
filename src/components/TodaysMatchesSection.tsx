@@ -246,7 +246,11 @@ export function TodaysMatchesSection() {
         setIsLoading(false);
       });
     (async () => {
-      const { data } = await supabase.from("ads").select("*").eq("active", true).eq("placement", "sidebar");
+      const { data } = await supabase
+        .from("ads")
+        .select("id, title, image_url, link_url, type, placement, ad_id, ad_script, active")
+        .eq("active", true)
+        .eq("placement", "sidebar");
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {

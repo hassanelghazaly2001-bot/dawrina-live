@@ -106,66 +106,58 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (!authed) return;
-    function loadFromLocal() {
-      try {
-        const rawList = window.localStorage.getItem("custom-matches");
-        const arr = rawList ? ((JSON.parse(rawList) as Match[]) ?? []) : [];
-        setMatches(Array.isArray(arr) ? arr : []);
-        setAutoStatus(`تم تحميل ${Array.isArray(arr) ? arr.length : 0} مباراة من التخزين المحلي`);
-        const initialEntries: Record<string, string[]> = {};
-        const initialStatuses: Record<string, "live" | "upcoming" | "finished"> = {};
-        const initialMetas: Record<string, { tvChannel: string; commentator: string; stadium: string }> = {};
-        for (const m of arr) {
-          try {
-            const raw = window.localStorage.getItem(`match-streams:${m.id}`);
-            initialEntries[m.id] = raw ? (JSON.parse(raw) as string[]) : ["", "", "", ""];
-          } catch {
-            initialEntries[m.id] = ["", "", "", ""];
-          }
-          const st = window.localStorage.getItem(`match-status:${m.id}`);
-          initialStatuses[m.id] =
-            st === "live" || st === "upcoming" || st === "finished" ? (st as "live" | "upcoming" | "finished") : m.status;
-          try {
-            const metaRaw = window.localStorage.getItem(`match-meta:${m.id}`);
-            if (metaRaw) {
-              const obj = JSON.parse(metaRaw) as { tvChannel?: string; commentator?: string; stadium?: string };
-              initialMetas[m.id] = {
-                tvChannel: obj.tvChannel ?? "",
-                commentator: obj.commentator ?? "",
-                stadium: obj.stadium ?? "",
-              };
-            } else {
-              initialMetas[m.id] = { tvChannel: "", commentator: "", stadium: "" };
-            }
-          } catch {
-            initialMetas[m.id] = { tvChannel: "", commentator: "", stadium: "" };
-          }
-        }
-        setEntries(initialEntries);
-        setStatuses(initialStatuses);
-        setMetas(initialMetas);
-      } catch {
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase.from("matches").select("*");
+      if (!mounted) return;
+      if (error || !Array.isArray(data)) {
         setMatches([]);
         setEntries({});
         setStatuses({});
         setMetas({});
-        setAutoStatus("تعذر قراءة المباريات من التخزين المحلي");
+        setAutoStatus("تعذر تحميل المباريات من قاعدة البيانات");
+        return;
       }
-    }
-    loadFromLocal();
-    function onStorage(e: StorageEvent) {
-      if (e.key === "custom-matches" || (e.key?.startsWith("match-") ?? false)) {
-        loadFromLocal();
+      setMatches(
+        data.map((row: { [k: string]: unknown }) => ({
+          id: String(row.id),
+          homeTeam: row.home_team ?? "",
+          awayTeam: row.away_team ?? "",
+          league: row.league ?? "",
+          leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+          date: row.date ?? "",
+          time: row.time ?? "",
+          status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+          channelSlug: (row.channel as string | undefined) ?? undefined,
+          homeLogo: (row.logo_home as string | undefined) ?? undefined,
+          awayLogo: (row.logo_away as string | undefined) ?? undefined,
+          streamUrl: (row.live_url as string | undefined) ?? "",
+          commentator: (row.commentator as string | undefined) ?? undefined,
+        }))
+      );
+      const initialEntries: Record<string, string[]> = {};
+      const initialStatuses: Record<string, "live" | "upcoming" | "finished"> = {};
+      const initialMetas: Record<string, { tvChannel: string; commentator: string; stadium: string }> = {};
+      for (const row of data as Array<{ [k: string]: unknown }>) {
+        const idStr = String(row.id);
+        initialEntries[idStr] = [String(row.live_url ?? "") || "", "", "", ""];
+        initialStatuses[idStr] = (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished");
+        initialMetas[idStr] = {
+          tvChannel: "",
+          commentator: (row.commentator as string | undefined) ?? "",
+          stadium: "",
+        };
       }
-    }
-    function onCustomUpdated() {
-      loadFromLocal();
-    }
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("custom-matches-updated", onCustomUpdated as EventListener);
+      setEntries(initialEntries);
+      setStatuses(initialStatuses);
+      setMetas(initialMetas);
+      setAutoStatus(`تم تحميل ${data.length} مباراة من قاعدة البيانات`);
+    })().catch(() => {
+      setMatches([]);
+      setAutoStatus("تعذر تحميل المباريات من قاعدة البيانات");
+    });
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("custom-matches-updated", onCustomUpdated as EventListener);
+      mounted = false;
     };
   }, [authed]);
   useEffect(() => {

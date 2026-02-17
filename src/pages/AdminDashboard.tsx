@@ -374,7 +374,7 @@ const AdminDashboard = () => {
     setStatus("تم حفظ الإعلان");
   }
 
-  async function handleAddMatch(match: Match) {
+  async function handleAddMatch(match: Match): Promise<string | null> {
     const row = {
       home_team: match.homeTeam || null,
       away_team: match.awayTeam || null,
@@ -390,14 +390,15 @@ const AdminDashboard = () => {
       status: match.status || "upcoming",
       active: true,
     };
-    const { error } = await supabase.from("matches").insert([row]);
-    if (error) {
+    const { data, error } = await supabase.from("matches").insert([row]).select("*");
+    if (error || !Array.isArray(data) || data.length === 0) {
       alert(error.message || "تعذر حفظ المباراة في Supabase");
-      return false;
+      return null;
     }
     console.log("SUPABASE_MATCH_SAVED", row);
     setStatus("تم حفظ المباراة في Supabase");
-    return true;
+    const insertedId = String((data[0] as { id: string }).id);
+    return insertedId;
   }
 
   async function addNewMatch(e: React.FormEvent<HTMLFormElement>) {
@@ -412,7 +413,6 @@ const AdminDashboard = () => {
       return;
     }
     const dateVal = selectedDate;
-    const newId = `${homeTeam}-${awayTeam}-${dateVal}-${time}`;
     const edited = editingId;
     const leagueIcon = String(fd.get("leagueLogo") ?? "").trim() || undefined;
     const otherSlug = String(fd.get("otherSlug") ?? "").trim();
@@ -435,7 +435,7 @@ const AdminDashboard = () => {
     const commentator = String(fd.get("commentator") ?? "").trim();
     const stream1 = String(fd.get("stream1") ?? "").trim();
     const match: Match = {
-      id: newId,
+      id: "",
       homeTeam,
       awayTeam,
       league,
@@ -451,7 +451,7 @@ const AdminDashboard = () => {
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
       commentator,
     };
-    await handleAddMatch(match);
+    const insertedId = await handleAddMatch(match);
     const { data } = await supabase.from("matches").select("*");
     if (Array.isArray(data)) {
       setMatches(
@@ -472,9 +472,11 @@ const AdminDashboard = () => {
         }))
       );
     }
-    setEntries((prev) => ({ ...prev, [newId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
-    setStatuses((prev) => ({ ...prev, [newId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
-    setMetas((prev) => ({ ...prev, [newId]: { tvChannel, commentator, stadium } }));
+    if (insertedId) {
+      setEntries((prev) => ({ ...prev, [insertedId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
+      setStatuses((prev) => ({ ...prev, [insertedId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
+      setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel, commentator, stadium } }));
+    }
     setShowNew(false);
     setEditingId(null);
     setFormData({

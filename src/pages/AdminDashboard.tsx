@@ -23,7 +23,7 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState<"today" | "tomorrow">("today");
   const [adminChannelFilter, setAdminChannelFilter] = useState<"all" | "bein" | "ssc" | "others">("all");
   const [selectedServer, setSelectedServer] = useState<"panda" | "starz">("panda");
-  const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; position?: string; active?: boolean }[]>([]);
+  const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }[]>([]);
   const [showAdForm, setShowAdForm] = useState(false);
   const adFormRef = useRef<HTMLFormElement | null>(null);
   const PANDA_SLUGS = [
@@ -1030,8 +1030,7 @@ const AdminDashboard = () => {
                     image_url: type === "image" ? (image_url || null) : null,
                     link_url: type === "image" ? (link_url || null) : null,
                     ad_id: type === "id" ? (ad_id ?? null) : null,
-                    script: type === "script" ? (script || null) : null,
-                    position: placement,
+                    ad_script: type === "script" ? (script || null) : null,
                     active,
                   };
                   const { data, error } = await supabase.from("ads").insert(payload).select("*").single();
@@ -1041,11 +1040,10 @@ const AdminDashboard = () => {
                       title: data.title,
                       image_url: data.image_url,
                       link_url: data.link_url,
-                      position: data.position,
                       active: !!data.active,
                       type: data.type,
                       ad_id: data.ad_id,
-                      script: data.script,
+                      ad_script: data.ad_script,
                       placement: data.placement,
                     }]);
                     setShowAdForm(false);
@@ -1146,7 +1144,7 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-2">
                           {(adTypesMap[a.id] ?? a.type ?? "image") === "script" && (
-                            <textarea name="ad_script" data-id={a.id} defaultValue={a.script ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" rows={3} />
+                            <textarea name="ad_script" data-id={a.id} defaultValue={a.ad_script ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" rows={3} />
                           )}
                         </td>
                         <td className="p-2">
@@ -1177,13 +1175,12 @@ const AdminDashboard = () => {
                                     image_url: type === "image" ? (image_url || null) : null,
                                     link_url: type === "image" ? (link_url || null) : null,
                                     ad_id: type === "id" ? (ad_id ?? null) : null,
-                                    script: type === "script" ? (script || null) : null,
-                                    position: placement,
+                                    ad_script: type === "script" ? (script || null) : null,
                                     active,
                                   };
                                   const { error } = await supabase.from("ads").update(payload).eq("id", a.id);
                                   if (!error) {
-                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, ad_id, script, placement, type, position: placement, active } : x)));
+                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, ad_id, ad_script: script, placement, type, active } : x)));
                                     setStatus("تم حفظ الإعلان");
                                   } else {
                                     setStatus(error.message || "تعذر حفظ الإعلان");

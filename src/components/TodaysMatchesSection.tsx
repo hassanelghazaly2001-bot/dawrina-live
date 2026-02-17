@@ -250,7 +250,7 @@ export function TodaysMatchesSection() {
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; script?: string; active?: boolean };
+            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
             return {
               id: String(a.id),
               title: a.title,
@@ -258,7 +258,7 @@ export function TodaysMatchesSection() {
               image_url: a.image_url,
               link_url: a.link_url,
               ad_id: a.ad_id,
-              script: a.script,
+              ad_script: a.ad_script,
               active: !!a.active,
             };
           })
@@ -433,8 +433,8 @@ export function TodaysMatchesSection() {
                   )
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
-                ) : a.type === "script" && a.script ? (
-                  <div dangerouslySetInnerHTML={{ __html: a.script }} />
+                ) : a.type === "script" && a.ad_script ? (
+                  <div dangerouslySetInnerHTML={{ __html: a.ad_script }} />
                 ) : null}
               </div>
             ))}

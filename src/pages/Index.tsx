@@ -10,7 +10,7 @@ type Ad = {
   image_url?: string;
   link_url?: string;
   ad_id?: number;
-  script?: string;
+  ad_script?: string;
   active?: boolean;
 };
 
@@ -22,7 +22,7 @@ const Index = () => {
       if (Array.isArray(data)) {
         setAds(
           data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline"; position?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_id?: number; script?: string; active?: boolean };
+            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline"; position?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
             return {
               id: String(a.id),
               title: a.title,
@@ -31,7 +31,7 @@ const Index = () => {
               image_url: a.image_url,
               link_url: a.link_url,
               ad_id: a.ad_id,
-              script: a.script,
+              ad_script: a.ad_script,
               active: !!a.active,
             };
           })
@@ -54,8 +54,8 @@ const Index = () => {
     if (a.type === "id" && a.ad_id) {
       return <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>;
     }
-    if (a.type === "script" && a.script) {
-      return <div dangerouslySetInnerHTML={{ __html: a.script }} />;
+    if (a.type === "script" && a.ad_script) {
+      return <div dangerouslySetInnerHTML={{ __html: a.ad_script }} />;
     }
     return null;
   }

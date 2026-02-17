@@ -326,6 +326,47 @@ const AdminDashboard = () => {
     setMetas((prev) => ({ ...prev, [id]: { ...(prev[id] ?? { tvChannel: "", commentator: "", stadium: "" }), [key]: value } }));
   }
 
+  async function handleSaveAd(id: string) {
+    console.log("Save button clicked!", { id, authed });
+    if (!authed) {
+      alert("Access denied");
+      return;
+    }
+    const getVal = (name: string) => (document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${id}"]`)?.value ?? "").trim();
+    const getValArea = (name: string) => (document.querySelector<HTMLTextAreaElement>(`[name="${name}"][data-id="${id}"]`)?.value ?? "").trim();
+    const getChecked = (name: string) => !!document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${id}"]`)?.checked;
+    const title = getVal("ad_title");
+    const type = adTypesMap[id] ?? (ads.find((x) => x.id === id)?.type ?? "image");
+    const placement = adPlacementsMap[id] ?? (ads.find((x) => x.id === id)?.placement ?? "header");
+    const image_url = getVal("ad_image_url");
+    const link_url = getVal("ad_link_url");
+    const ad_id_raw = getVal("ad_ad_id");
+    const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
+    const ad_script = getValArea("ad_script");
+    const active = getChecked("ad_active");
+    if (!title || !type || !placement || (type === "image" && (!image_url || !link_url)) || (type === "id" && !ad_id_raw) || (type === "script" && !ad_script)) {
+      alert("Please fill all fields");
+      return;
+    }
+    const payload = {
+      title: title || null,
+      type,
+      placement,
+      image_url: type === "image" ? (image_url || null) : null,
+      link_url: type === "image" ? (link_url || null) : null,
+      ad_id: type === "id" ? (ad_id ?? null) : null,
+      ad_script: type === "script" ? (ad_script || null) : null,
+      active,
+    };
+    const { error } = await supabase.from("ads").update(payload).eq("id", id);
+    if (!error) {
+      setAds((prev) => prev.map((x) => (x.id === id ? { ...x, title, image_url, link_url, ad_id, ad_script, placement, type, active } : x)));
+      setStatus("تم حفظ الإعلان");
+    } else {
+      setStatus(error.message || "تعذر حفظ الإعلان");
+    }
+  }
+
   async function handleAddMatch(match: Match) {
     const row = {
       id: match.id,
@@ -1154,38 +1195,7 @@ const AdminDashboard = () => {
                             <button
                               type="button"
                               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                              onClick={() => {
-                                const getVal = (name: string) => (document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.value ?? "").trim();
-                                const getChecked = (name: string) => !!document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${a.id}"]`)?.checked;
-                                const title = getVal("ad_title");
-                                const type = adTypesMap[a.id] ?? a.type ?? "image";
-                                const placement = adPlacementsMap[a.id] ?? a.placement ?? "header";
-                                const image_url = getVal("ad_image_url");
-                                const link_url = getVal("ad_link_url");
-                                const ad_id_raw = getVal("ad_ad_id");
-                                const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
-                                const script = (document.querySelector<HTMLTextAreaElement>(`[name="ad_script"][data-id="${a.id}"]`)?.value ?? "").trim();
-                                const active = getChecked("ad_active");
-                                (async () => {
-                                  const payload = {
-                                    title: title || null,
-                                    type,
-                                    placement,
-                                    image_url: type === "image" ? (image_url || null) : null,
-                                    link_url: type === "image" ? (link_url || null) : null,
-                                    ad_id: type === "id" ? (ad_id ?? null) : null,
-                                    ad_script: type === "script" ? (script || null) : null,
-                                    active,
-                                  };
-                                  const { error } = await supabase.from("ads").update(payload).eq("id", a.id);
-                                  if (!error) {
-                                    setAds((prev) => prev.map((x) => (x.id === a.id ? { ...x, title, image_url, link_url, ad_id, ad_script: script, placement, type, active } : x)));
-                                    setStatus("تم حفظ الإعلان");
-                                  } else {
-                                    setStatus(error.message || "تعذر حفظ الإعلان");
-                                  }
-                                })().catch(() => setStatus("تعذر حفظ الإعلان"));
-                              }}
+                              onClick={() => handleSaveAd(a.id)}
                             >
                               حفظ
                             </button>

@@ -299,6 +299,7 @@ const AdminDashboard = () => {
         status: statusVal || "upcoming",
         active: true,
       };
+      console.log("Sending to Supabase:", row);
       const { error } = await supabase.from("matches").insert([row]);
       if (error) {
         alert(error.message || "تعذر حفظ المباراة");
@@ -390,6 +391,7 @@ const AdminDashboard = () => {
       status: match.status || "upcoming",
       active: true,
     };
+    console.log("Sending to Supabase:", row);
     const { data, error } = await supabase.from("matches").insert([row]).select("*");
     if (error || !Array.isArray(data) || data.length === 0) {
       alert(error.message || "تعذر حفظ المباراة في Supabase");
@@ -477,6 +479,8 @@ const AdminDashboard = () => {
       setStatuses((prev) => ({ ...prev, [insertedId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
       setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel, commentator, stadium } }));
     }
+    if (formRef.current) formRef.current.reset();
+    setSelectedDate("today");
     setShowNew(false);
     setEditingId(null);
     setFormData({

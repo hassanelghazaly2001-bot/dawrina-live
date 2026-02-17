@@ -381,28 +381,37 @@ const AdminDashboard = () => {
   }
 
   async function handleAddMatch(match: Match): Promise<string | null> {
-    const row = {
+    const timeStr = String(match.time ?? "").trim();
+    const normalizedDate =
+      match.date === "today" || match.date === "tomorrow"
+        ? match.date
+        : match.date === todayISO
+        ? "today"
+        : match.date === tomorrowISO
+        ? "tomorrow"
+        : selectedDate;
+    const finalData = {
       home_team: match.homeTeam || null,
       away_team: match.awayTeam || null,
       logo_home: match.homeLogo ?? null,
       logo_away: match.awayLogo ?? null,
       league: match.league || null,
       league_logo: match.leagueIcon ?? null,
-      time: match.time || null,
-      date: match.date ?? selectedDate,
+      time: timeStr || null,
+      date: normalizedDate,
       channel: match.channelSlug ?? null,
       commentator: match.commentator ?? null,
       live_url: match.streamUrl || null,
       status: match.status || "upcoming",
       active: true,
     };
-    console.log("Sending to Supabase:", row);
-    const { data, error } = await supabase.from("matches").insert([row]).select("*");
+    console.log("FINAL DATA TO SUPABASE:", finalData);
+    const { data, error } = await supabase.from("matches").insert([finalData]).select("*");
     if (error || !Array.isArray(data) || data.length === 0) {
       alert(error.message || "تعذر حفظ المباراة في Supabase");
       return null;
     }
-    console.log("SUPABASE_MATCH_SAVED", row);
+    console.log("SUPABASE_MATCH_SAVED", finalData);
     setStatus("تم حفظ المباراة في Supabase");
     const insertedId = String((data[0] as { id: string }).id);
     return insertedId;

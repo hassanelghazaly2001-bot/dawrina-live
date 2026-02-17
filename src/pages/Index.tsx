@@ -1,6 +1,7 @@
 import { TodaysMatchesSection } from "@/components/TodaysMatchesSection";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
+import { fetchFixturesForLeagues } from "@/services/footballService";
 
 type Ad = {
   id: string;
@@ -37,11 +38,12 @@ function AdScriptRenderer({ html }: { html: string }) {
 
 const Index = () => {
   const [ads, setAds] = useState<Ad[]>([]);
+  const [matchesCount, setMatchesCount] = useState<number>(0);
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, ad_id, ad_script, active")
+        .select("id, title, image_url, link_url, type, placement, ad_script, active")
         .eq("active", true);
       if (Array.isArray(data)) {
         const mapped = data.map((raw: unknown) => {
@@ -62,6 +64,13 @@ const Index = () => {
         setAds(mapped);
       }
     })().catch(() => void 0);
+  }, []);
+  useEffect(() => {
+    void fetchFixturesForLeagues()
+      .then((arr) => {
+        setMatchesCount(Array.isArray(arr) ? arr.length : 0);
+      })
+      .catch(() => setMatchesCount(0));
   }, []);
 
   function renderAd(a: Ad) {
@@ -85,6 +94,7 @@ const Index = () => {
   }
   return (
     <div className="min-h-screen bg-background">
+      <h1 className="text-xs text-muted-foreground ps-2">Matches count: {matchesCount}</h1>
       {ads.filter((a) => a.placement === "header").map((a) => (
         <div key={a.id} className="border-b border-border bg-card/40 py-2">{renderAd(a)}</div>
       ))}

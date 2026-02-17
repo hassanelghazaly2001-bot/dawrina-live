@@ -23,22 +23,22 @@ const Index = () => {
         .select("id, title, image_url, link_url, type, placement, ad_id, ad_script, active")
         .eq("active", true);
       if (Array.isArray(data)) {
-        setAds(
-          data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
-            return {
-              id: String(a.id),
-              title: a.title,
-              type: a.type,
-              placement: a.placement,
-              image_url: a.image_url,
-              link_url: a.link_url,
-              ad_id: a.ad_id,
-              ad_script: a.ad_script,
-              active: !!a.active,
-            };
-          })
-        );
+        const mapped = data.map((raw: unknown) => {
+          const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
+          return {
+            id: String(a.id),
+            title: a.title,
+            type: a.type,
+            placement: a.placement,
+            image_url: a.image_url,
+            link_url: a.link_url,
+            ad_id: a.ad_id,
+            ad_script: a.ad_script,
+            active: !!a.active,
+          };
+        });
+        console.log("Ads loaded from DB", mapped);
+        setAds(mapped);
       }
     })().catch(() => void 0);
   }, []);

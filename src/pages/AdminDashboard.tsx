@@ -6,6 +6,9 @@ import { Star } from "lucide-react";
 import { supabase } from "@/lib/supabase";
  
 
+const adTypesMap = { image: "Image Ad", id: "Ad Unit ID", script: "Custom Script" };
+const placementMap = { header: "Header", sidebar: "Sidebar", inline: "Inline" };
+
 const AdminDashboard = () => {
   const ADMIN_BYPASS = false;
   const [authed, setAuthed] = useState(false);
@@ -26,6 +29,8 @@ const AdminDashboard = () => {
   const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }[]>([]);
   const [showAdForm, setShowAdForm] = useState(false);
   const adFormRef = useRef<HTMLFormElement | null>(null);
+  const [adTypeSelections, setAdTypeSelections] = useState<Record<string, "image" | "id" | "script">>({});
+  const [placementSelections, setPlacementSelections] = useState<Record<string, "header" | "sidebar" | "inline">>({});
   const PANDA_SLUGS = [
     ...Array.from({ length: 10 }, (_, i) => `bein-${i + 1}`),
     ...Array.from({ length: 8 }, (_, i) => `ssc-${i + 1}`),
@@ -180,6 +185,16 @@ const AdminDashboard = () => {
             placement: a.placement ?? "header",
           }))
         );
+        const typesInit: Record<string, "image" | "id" | "script"> = {};
+        const placementsInit: Record<string, "header" | "sidebar" | "inline"> = {};
+        const dataArr = data as Array<{ id: number | string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline" }>;
+        for (const a of dataArr) {
+          const idStr = String(a.id);
+          typesInit[idStr] = a.type ?? "image";
+          placementsInit[idStr] = a.placement ?? "header";
+        }
+        setAdTypeSelections(typesInit);
+        setPlacementSelections(placementsInit);
       }
     }
     if (authed) {
@@ -338,8 +353,8 @@ const AdminDashboard = () => {
     const getValArea = (name: string) => (document.querySelector<HTMLTextAreaElement>(`[name="${name}"][data-id="${id}"]`)?.value ?? "").trim();
     const getChecked = (name: string) => !!document.querySelector<HTMLInputElement>(`[name="${name}"][data-id="${id}"]`)?.checked;
     const title = getVal("ad_title");
-    const type = adTypesMap[id] ?? (ads.find((x) => x.id === id)?.type ?? "image");
-    const placement = adPlacementsMap[id] ?? (ads.find((x) => x.id === id)?.placement ?? "header");
+    const type = adTypeSelections[id] ?? (ads.find((x) => x.id === id)?.type ?? "image");
+    const placement = placementSelections[id] ?? (ads.find((x) => x.id === id)?.placement ?? "header");
     const image_url = getVal("ad_image_url");
     const link_url = getVal("ad_link_url");
     const ad_id_raw = getVal("ad_ad_id");
@@ -1151,41 +1166,47 @@ const AdminDashboard = () => {
                           <select
                             className="rounded-md border bg-card p-2 text-sm"
                             defaultValue={a.type ?? "image"}
-                            onChange={(e) => setAdTypesMap((prev) => ({ ...prev, [a.id]: (e.target.value as "image" | "id" | "script") ?? "image" }))}
+                            onChange={(e) => setAdTypeSelections((prev) => ({ ...prev, [a.id]: (e.target.value as "image" | "id" | "script") ?? "image" }))}
                           >
                             <option value="image">صورة + رابط</option>
                             <option value="id">معرّف إعلان (رقمي)</option>
                             <option value="script">كود مخصص</option>
                           </select>
+                          <div className="mt-1 text-[11px] text-muted-foreground">
+                            {adTypesMap[(adTypeSelections[a.id] ?? a.type ?? "image") as "image" | "id" | "script"]}
+                          </div>
                         </td>
                         <td className="p-2">
                           <select
                             className="rounded-md border bg-card p-2 text-sm"
                             defaultValue={a.placement ?? a.position ?? "header"}
-                            onChange={(e) => setAdPlacementsMap((prev) => ({ ...prev, [a.id]: (e.target.value as "header" | "sidebar" | "inline") ?? "header" }))}
+                            onChange={(e) => setPlacementSelections((prev) => ({ ...prev, [a.id]: (e.target.value as "header" | "sidebar" | "inline") ?? "header" }))}
                           >
                             <option value="header">Header</option>
                             <option value="sidebar">Sidebar</option>
                             <option value="inline">Inline</option>
                           </select>
+                          <div className="mt-1 text-[11px] text-muted-foreground">
+                            {placementMap[(placementSelections[a.id] ?? a.placement ?? "header") as "header" | "sidebar" | "inline"]}
+                          </div>
                         </td>
                         <td className="p-2">
-                          {(adTypesMap[a.id] ?? a.type ?? "image") === "image" && (
+                          {(adTypeSelections[a.id] ?? a.type ?? "image") === "image" && (
                             <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
                           )}
                         </td>
                         <td className="p-2">
-                          {(adTypesMap[a.id] ?? a.type ?? "image") === "image" && (
+                          {(adTypeSelections[a.id] ?? a.type ?? "image") === "image" && (
                             <input name="ad_link_url" data-id={a.id} defaultValue={a.link_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
                           )}
                         </td>
                         <td className="p-2">
-                          {(adTypesMap[a.id] ?? a.type ?? "image") === "id" && (
+                          {(adTypeSelections[a.id] ?? a.type ?? "image") === "id" && (
                             <input name="ad_ad_id" data-id={a.id} defaultValue={a.ad_id ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
                           )}
                         </td>
                         <td className="p-2">
-                          {(adTypesMap[a.id] ?? a.type ?? "image") === "script" && (
+                          {(adTypeSelections[a.id] ?? a.type ?? "image") === "script" && (
                             <textarea name="ad_script" data-id={a.id} defaultValue={a.ad_script ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" rows={3} />
                           )}
                         </td>
@@ -1197,7 +1218,10 @@ const AdminDashboard = () => {
                             <button
                               type="button"
                               className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                              onClick={() => handleSaveAd(a.id)}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleSaveAd(a.id);
+                              }}
                             >
                               حفظ
                             </button>

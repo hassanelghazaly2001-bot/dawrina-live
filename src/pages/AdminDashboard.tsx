@@ -281,7 +281,6 @@ const AdminDashboard = () => {
     const commentator = getVal("commentator");
     const stadium = getVal("stadium");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
-    const streams = [stream1, stream2].filter((s) => s.length > 0);
     (async () => {
       const row = {
         home_team: homeTeam || null,
@@ -303,39 +302,29 @@ const AdminDashboard = () => {
       if (error) {
         await supabase.from("matches").update({ home_team: homeTeam || null, away_team: awayTeam || null, league: league || null, time: time || null, status: statusVal || null }).eq("id", id);
       }
+      const { data } = await supabase.from("matches").select("*");
+      if (Array.isArray(data)) {
+        setMatches(
+          data.map((row: { [k: string]: unknown }) => ({
+            id: String(row.id),
+            homeTeam: row.home_team ?? "",
+            awayTeam: row.away_team ?? "",
+            league: row.league ?? "",
+            date: row.date ?? "",
+            time: row.time ?? "",
+            status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+            channelSlug: row.channel_slug ?? undefined,
+            backupIframe: row.backup_iframe ?? undefined,
+            playerServer: row.player_server ?? undefined,
+            homeLogo: row.home_logo ?? undefined,
+            awayLogo: row.away_logo ?? undefined,
+            tvChannel: row.tv_channel ?? undefined,
+            commentator: row.commentator ?? undefined,
+            stadium: row.stadium ?? undefined,
+          }))
+        );
+      }
     })().catch(() => void 0);
-    window.localStorage.setItem(`match-streams:${id}`, JSON.stringify(streams));
-    window.localStorage.setItem(`match-status:${id}`, statusVal || "upcoming");
-    window.localStorage.setItem(
-      `match-meta:${id}`,
-      JSON.stringify({ tvChannel, commentator, stadium })
-    );
-    try {
-      const listRaw = window.localStorage.getItem("custom-matches");
-      const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
-      const merged = [
-        ...list.filter((m) => m.id !== id),
-        {
-          ...(matches.find((m) => m.id === id) ?? { id, status: "upcoming" }),
-          id,
-          homeTeam: homeTeam || (matches.find((m) => m.id === id)?.homeTeam ?? ""),
-          awayTeam: awayTeam || (matches.find((m) => m.id === id)?.awayTeam ?? ""),
-          league: league || (matches.find((m) => m.id === id)?.league ?? ""),
-          date: date || (matches.find((m) => m.id === id)?.date ?? ""),
-          time: time || (matches.find((m) => m.id === id)?.time ?? ""),
-          channelSlug: channelSlug || (matches.find((m) => m.id === id)?.channelSlug ?? undefined),
-          backupIframe: backupIframe || (matches.find((m) => m.id === id)?.backupIframe ?? undefined),
-          playerServer: playerServer || (matches.find((m) => m.id === id)?.playerServer ?? undefined),
-          homeLogo: homeLogo || undefined,
-          awayLogo: awayLogo || undefined,
-        } as Match,
-      ];
-      window.localStorage.setItem("custom-matches", JSON.stringify(merged));
-      setMatches(merged);
-      window.dispatchEvent(new Event("custom-matches-updated"));
-    } catch {
-      void 0;
-    }
     setStatus("Saved");
   }
 
@@ -473,27 +462,33 @@ const AdminDashboard = () => {
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
     };
     await handleAddMatch(match);
-    const listRaw = window.localStorage.getItem("custom-matches");
-    const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
-    const baseList = edited ? list.filter((m) => m.id !== edited) : list.filter((m) => m.id !== newId);
-    const merged = [...baseList, match];
-    window.localStorage.setItem("custom-matches", JSON.stringify(merged));
-    const streams = [String(fd.get("stream1") ?? "").trim(), String(fd.get("stream2") ?? "").trim()].filter((s) => s.length > 0);
-    window.localStorage.setItem(`match-streams:${newId}`, JSON.stringify(streams));
-    const statusVal = String(fd.get("statusNew") ?? "upcoming");
-    window.localStorage.setItem(`match-status:${newId}`, statusVal);
     const tvChannel = String(fd.get("tvChannel") ?? "").trim();
     const commentator = String(fd.get("commentator") ?? "").trim();
     const stadium = String(fd.get("stadium") ?? "").trim();
-    window.localStorage.setItem(`match-meta:${newId}`, JSON.stringify({ tvChannel, commentator, stadium }));
-    if (edited && edited !== newId) {
-      window.localStorage.removeItem(`match-streams:${edited}`);
-      window.localStorage.removeItem(`match-status:${edited}`);
-      window.localStorage.removeItem(`match-meta:${edited}`);
+    const { data } = await supabase.from("matches").select("*");
+    if (Array.isArray(data)) {
+      setMatches(
+        data.map((row: { [k: string]: unknown }) => ({
+          id: String(row.id),
+          homeTeam: row.home_team ?? "",
+          awayTeam: row.away_team ?? "",
+          league: row.league ?? "",
+          date: row.date ?? "",
+          time: row.time ?? "",
+          status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+          channelSlug: row.channel_slug ?? undefined,
+          backupIframe: row.backup_iframe ?? undefined,
+          playerServer: row.player_server ?? undefined,
+          homeLogo: row.home_logo ?? undefined,
+          awayLogo: row.away_logo ?? undefined,
+          tvChannel: row.tv_channel ?? undefined,
+          commentator: row.commentator ?? undefined,
+          stadium: row.stadium ?? undefined,
+        }))
+      );
     }
-    setMatches(merged);
     setEntries((prev) => ({ ...prev, [newId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
-    setStatuses((prev) => ({ ...prev, [newId]: "upcoming" }));
+    setStatuses((prev) => ({ ...prev, [newId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
     setMetas((prev) => ({ ...prev, [newId]: { tvChannel, commentator, stadium } }));
     setShowNew(false);
     setEditingId(null);
@@ -512,21 +507,34 @@ const AdminDashboard = () => {
       stadium: "",
     });
     setStatus(edited ? "تم تحديث المباراة" : "تمت إضافة المباراة");
-    window.dispatchEvent(new Event("custom-matches-updated"));
   }
 
   function deleteMatch(id: string) {
     (async () => {
       await supabase.from("matches").delete().eq("id", id);
+      const { data } = await supabase.from("matches").select("*");
+      if (Array.isArray(data)) {
+        setMatches(
+          data.map((row: { [k: string]: unknown }) => ({
+            id: String(row.id),
+            homeTeam: row.home_team ?? "",
+            awayTeam: row.away_team ?? "",
+            league: row.league ?? "",
+            date: row.date ?? "",
+            time: row.time ?? "",
+            status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+            channelSlug: row.channel_slug ?? undefined,
+            backupIframe: row.backup_iframe ?? undefined,
+            playerServer: row.player_server ?? undefined,
+            homeLogo: row.home_logo ?? undefined,
+            awayLogo: row.away_logo ?? undefined,
+            tvChannel: row.tv_channel ?? undefined,
+            commentator: row.commentator ?? undefined,
+            stadium: row.stadium ?? undefined,
+          }))
+        );
+      }
     })().catch(() => void 0);
-    const listRaw = window.localStorage.getItem("custom-matches");
-    const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
-    const remaining = list.filter((m) => m.id !== id);
-    window.localStorage.setItem("custom-matches", JSON.stringify(remaining));
-    window.localStorage.removeItem(`match-streams:${id}`);
-    window.localStorage.removeItem(`match-status:${id}`);
-    window.localStorage.removeItem(`match-meta:${id}`);
-    setMatches(remaining);
     setEntries((prev) => {
       const { [id]: _, ...rest } = prev;
       return rest;
@@ -540,25 +548,36 @@ const AdminDashboard = () => {
       return rest;
     });
     setStatus("تم حذف المباراة");
-    window.dispatchEvent(new Event("custom-matches-updated"));
   }
 
   function setTopMatch(id: string) {
-    try {
-      const listRaw = window.localStorage.getItem("custom-matches");
-      const list = listRaw ? ((JSON.parse(listRaw) as Match[]) ?? []) : [];
-      const target = list.find((mm) => mm.id === id) || null;
-      const targetDate = target?.date ?? todayISO;
-      const updated = list.map((m) =>
-        m.date === targetDate ? { ...m, isTopMatch: m.id === id } : m
-      );
-      window.localStorage.setItem("custom-matches", JSON.stringify(updated));
-      setMatches(updated);
+    (async () => {
+      await supabase.from("matches").update({ is_top_match: true }).eq("id", id);
+      const { data } = await supabase.from("matches").select("*");
+      if (Array.isArray(data)) {
+        setMatches(
+          data.map((row: { [k: string]: unknown }) => ({
+            id: String(row.id),
+            homeTeam: row.home_team ?? "",
+            awayTeam: row.away_team ?? "",
+            league: row.league ?? "",
+            date: row.date ?? "",
+            time: row.time ?? "",
+            status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+            channelSlug: row.channel_slug ?? undefined,
+            backupIframe: row.backup_iframe ?? undefined,
+            playerServer: row.player_server ?? undefined,
+            homeLogo: row.home_logo ?? undefined,
+            awayLogo: row.away_logo ?? undefined,
+            tvChannel: row.tv_channel ?? undefined,
+            commentator: row.commentator ?? undefined,
+            stadium: row.stadium ?? undefined,
+            isTopMatch: Boolean(row.is_top_match ?? false),
+          }))
+        );
+      }
       setStatus("تم تعيين المباراة كقمة اليوم");
-      window.dispatchEvent(new Event("custom-matches-updated"));
-    } catch {
-      setStatus("تعذر تعيين قمة اليوم");
-    }
+    })().catch(() => setStatus("تعذر تعيين قمة اليوم"));
   }
 
   function beginEdit(id: string) {

@@ -26,6 +26,7 @@ const AdminDashboard = () => {
   const [adminTab, setAdminTab] = useState<"today" | "tomorrow">("today");
   const [adminChannelFilter, setAdminChannelFilter] = useState<"all" | "bein" | "ssc" | "others">("all");
   const [selectedServer, setSelectedServer] = useState<"panda" | "starz">("panda");
+  const [selectedDate, setSelectedDate] = useState<"today" | "tomorrow">("today");
   const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }[]>([]);
   const [showAdForm, setShowAdForm] = useState(false);
   const adFormRef = useRef<HTMLFormElement | null>(null);
@@ -259,7 +260,6 @@ const AdminDashboard = () => {
     const awayTeam = getVal("awayTeam");
     const league = getVal("league");
     const time = getVal("time");
-    const date = getVal("date");
     const homeLogo = getVal("homeLogo");
     const awayLogo = getVal("awayLogo");
     const stream1 = getVal("stream1");
@@ -291,7 +291,7 @@ const AdminDashboard = () => {
         logo_away: awayLogo || null,
         league: league || null,
         league_logo: league_logo || null,
-        date: date || null,
+        date: selectedDate,
         time: time || null,
         channel: (otherSlug || channelSlug) || null,
         commentator: commentator || null,
@@ -383,7 +383,7 @@ const AdminDashboard = () => {
       league: match.league || null,
       league_logo: match.leagueIcon ?? null,
       time: match.time || null,
-      date: match.date ?? null,
+      date: match.date ?? selectedDate,
       channel: match.channelSlug ?? null,
       commentator: match.commentator ?? null,
       live_url: match.streamUrl || null,
@@ -411,14 +411,7 @@ const AdminDashboard = () => {
       setStatus("يرجى إدخال بيانات المباراة الأساسية");
       return;
     }
-    const dateOpt = String(fd.get("dateRadio") ?? "today");
-    const now = new Date();
-    const d = new Date(now);
-    if (dateOpt === "tomorrow") d.setDate(d.getDate() + 1);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    const dateVal = `${y}-${m}-${day}`;
+    const dateVal = selectedDate;
     const newId = `${homeTeam}-${awayTeam}-${dateVal}-${time}`;
     const edited = editingId;
     const leagueIcon = String(fd.get("leagueLogo") ?? "").trim() || undefined;
@@ -613,10 +606,12 @@ const AdminDashboard = () => {
       const tomorrowISO = `${oy}-${om}-${od}`;
       const rToday = f.querySelector<HTMLInputElement>('input[name="dateRadio"][value="today"]');
       const rTomorrow = f.querySelector<HTMLInputElement>('input[name="dateRadio"][value="tomorrow"]');
-      if (m.date === tomorrowISO) {
+      if (m.date === "tomorrow") {
         if (rTomorrow) rTomorrow.checked = true;
+        setSelectedDate("tomorrow");
       } else {
         if (rToday) rToday.checked = true;
+        setSelectedDate("today");
       }
       f.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
@@ -682,11 +677,23 @@ const AdminDashboard = () => {
               <div className="col-span-full flex items-center gap-3 rounded-md border bg-card p-2 text-xs">
                 <span className="text-muted-foreground">التاريخ:</span>
                 <label className="inline-flex items-center gap-1">
-                  <input type="radio" name="dateRadio" value="today" defaultChecked />
+                  <input
+                    type="radio"
+                    name="dateRadio"
+                    value="today"
+                    checked={selectedDate === "today"}
+                    onChange={() => setSelectedDate("today")}
+                  />
                   اليوم
                 </label>
                 <label className="inline-flex items-center gap-1">
-                  <input type="radio" name="dateRadio" value="tomorrow" />
+                  <input
+                    type="radio"
+                    name="dateRadio"
+                    value="tomorrow"
+                    checked={selectedDate === "tomorrow"}
+                    onChange={() => setSelectedDate("tomorrow")}
+                  />
                   الغد
                 </label>
               </div>

@@ -15,14 +15,14 @@ export async function fetchFixturesForLeagues(): Promise<Match[]> {
       time: String((row.time as string | undefined) ?? ""),
       status: (String((row.status as string | undefined) ?? "upcoming").toLowerCase() as Match["status"]),
       streamUrl: "",
-      channelSlug: (row.channel_slug as string | undefined) ? String(row.channel_slug as string) : undefined,
-      backupIframe: (row.backup_iframe as string | undefined) ? String(row.backup_iframe as string) : undefined,
-      playerServer: (row.player_server as string | undefined) ? (String(row.player_server as string) as "panda" | "starz") : undefined,
-      homeLogo: (row.home_logo as string | undefined) ? String(row.home_logo as string) : undefined,
-      awayLogo: (row.away_logo as string | undefined) ? String(row.away_logo as string) : undefined,
-      tvChannel: (row.tv_channel as string | undefined) ? String(row.tv_channel as string) : undefined,
-      commentator: (row.commentator as string | undefined) ? String(row.commentator as string) : undefined,
-      stadium: (row.stadium as string | undefined) ? String(row.stadium as string) : undefined,
+      channelSlug: undefined,
+      backupIframe: undefined,
+      playerServer: undefined,
+      homeLogo: (row.logo_home as string | undefined) ? String(row.logo_home as string) : undefined,
+      awayLogo: (row.logo_away as string | undefined) ? String(row.logo_away as string) : undefined,
+      tvChannel: undefined,
+      commentator: undefined,
+      stadium: undefined,
     }));
   } catch {
     return [];

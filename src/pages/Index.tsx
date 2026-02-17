@@ -6,11 +6,10 @@ import { fetchFixturesForLeagues } from "@/services/footballService";
 type Ad = {
   id: string;
   title?: string;
-  type?: "image" | "id" | "script";
+  type?: "image" | "script";
   placement?: "header" | "sidebar" | "inline";
   image_url?: string;
   link_url?: string;
-  ad_id?: number;
   ad_script?: string;
   active?: boolean;
 };
@@ -47,7 +46,7 @@ const Index = () => {
         .eq("active", true);
       if (Array.isArray(data)) {
         const mapped = data.map((raw: unknown) => {
-          const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
+          const a = raw as { id: number | string; title?: string; type?: "image" | "script"; placement?: "header" | "sidebar" | "inline"; image_url?: string; link_url?: string; ad_script?: string; active?: boolean };
           return {
             id: String(a.id),
             title: a.title,
@@ -55,7 +54,6 @@ const Index = () => {
             placement: a.placement,
             image_url: a.image_url,
             link_url: a.link_url,
-            ad_id: a.ad_id,
             ad_script: a.ad_script,
             active: !!a.active,
           };
@@ -83,9 +81,6 @@ const Index = () => {
       ) : (
         <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-24" />
       );
-    }
-    if (a.type === "id" && a.ad_id) {
-      return <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>;
     }
     if (a.type === "script" && a.ad_script) {
       return <AdScriptRenderer html={a.ad_script} />;

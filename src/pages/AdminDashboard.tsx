@@ -285,23 +285,20 @@ const AdminDashboard = () => {
       const row = {
         home_team: homeTeam || null,
         away_team: awayTeam || null,
+        logo_home: homeLogo || null,
+        logo_away: awayLogo || null,
         league: league || null,
         date: date || null,
         time: time || null,
-        status: statusVal || null,
-        channel_slug: channelSlug || null,
-        backup_iframe: backupIframe || null,
-        player_server: playerServer || null,
-        home_logo: homeLogo || null,
-        away_logo: awayLogo || null,
-        tv_channel: tvChannel || null,
-        commentator: commentator || null,
-        stadium: stadium || null,
+        status: statusVal || "upcoming",
+        active: true,
       };
-      const { error } = await supabase.from("matches").update(row).eq("id", id);
+      const { error } = await supabase.from("matches").insert([row]);
       if (error) {
-        await supabase.from("matches").update({ home_team: homeTeam || null, away_team: awayTeam || null, league: league || null, time: time || null, status: statusVal || null }).eq("id", id);
+        alert(error.message || "تعذر حفظ المباراة");
+        return;
       }
+      console.log("SUPABASE_MATCH_SAVED", row);
       const { data } = await supabase.from("matches").select("*");
       if (Array.isArray(data)) {
         setMatches(
@@ -360,51 +357,37 @@ const AdminDashboard = () => {
       placement,
       image_url: type === "image" ? (image_url || null) : null,
       link_url: type === "image" ? (link_url || null) : null,
-      ad_id: type === "id" ? (ad_id ?? null) : null,
       ad_script: type === "script" ? (ad_script || null) : null,
-      active,
+      active: !!active,
     };
-    const { error } = await supabase.from("ads").update(payload).eq("id", id);
-    if (!error) {
-      setAds((prev) => prev.map((x) => (x.id === id ? { ...x, title, image_url, link_url, ad_id, ad_script, placement, type, active } : x)));
-      setStatus("تم حفظ الإعلان");
-    } else {
+    const { error } = await supabase.from("ads").insert([payload]);
+    if (error) {
+      alert(error.message || "تعذر حفظ الإعلان");
       setStatus(error.message || "تعذر حفظ الإعلان");
+      return;
     }
+    console.log("SUPABASE_AD_SAVED", payload);
+    setStatus("تم حفظ الإعلان");
   }
 
   async function handleAddMatch(match: Match) {
     const row = {
-      id: match.id,
-      home_team: match.homeTeam,
-      away_team: match.awayTeam,
-      home_logo: match.homeLogo ?? null,
-      away_logo: match.awayLogo ?? null,
-      league: match.league,
-      time: match.time,
+      home_team: match.homeTeam || null,
+      away_team: match.awayTeam || null,
+      logo_home: match.homeLogo ?? null,
+      logo_away: match.awayLogo ?? null,
+      league: match.league || null,
+      time: match.time || null,
       date: match.date ?? null,
-      channel_slug: match.channelSlug ?? null,
+      status: match.status || "upcoming",
+      active: true,
     };
-    console.log("SUPABASE_INSERT_MATCH", row);
-    const { error } = await supabase.from("matches").insert(row);
+    const { error } = await supabase.from("matches").insert([row]);
     if (error) {
-      const minimal = {
-        id: match.id,
-        home_team: match.homeTeam,
-        away_team: match.awayTeam,
-        home_logo: match.homeLogo ?? null,
-        away_logo: match.awayLogo ?? null,
-        league: match.league,
-        time: match.time,
-        date: match.date ?? null,
-        channel_slug: match.channelSlug ?? null,
-      };
-      const retry = await supabase.from("matches").insert(minimal);
-      if (retry.error) {
-        setStatus(retry.error.message || "تعذر حفظ المباراة في Supabase");
-        return false;
-      }
+      alert(error.message || "تعذر حفظ المباراة في Supabase");
+      return false;
     }
+    console.log("SUPABASE_MATCH_SAVED", row);
     setStatus("تم حفظ المباراة في Supabase");
     return true;
   }

@@ -229,7 +229,7 @@ export function TodaysMatchesSection() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; script?: string; active?: boolean }[]>([]);
+  const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; ad_script?: string; active?: boolean }[]>([]);
 
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
   const todayISO = useMemo(() => {
@@ -274,14 +274,13 @@ export function TodaysMatchesSection() {
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "id" | "script"; image_url?: string; link_url?: string; ad_id?: number; ad_script?: string; active?: boolean };
+            const a = raw as { id: number | string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; ad_script?: string; active?: boolean };
             return {
               id: String(a.id),
               title: a.title,
               type: a.type,
               image_url: a.image_url,
               link_url: a.link_url,
-              ad_id: a.ad_id,
               ad_script: a.ad_script,
               active: !!a.active,
             };
@@ -291,31 +290,7 @@ export function TodaysMatchesSection() {
     })().catch(() => void 0);
   }, []);
 
-  useEffect(() => {
-    function refreshFromLocal() {
-      void fetchFixturesForLeagues()
-        .then((arr) => {
-          setMatches(arr);
-          // eslint-disable-next-line no-console
-          console.log("MATCHES_LOADED:", arr);
-        })
-        .catch(() => void 0);
-    }
-    function onStorage(e: StorageEvent) {
-      if (e.key === "custom-matches") {
-        refreshFromLocal();
-      }
-    }
-    function onCustomEvent() {
-      refreshFromLocal();
-    }
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("custom-matches-updated", onCustomEvent as EventListener);
-    return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("custom-matches-updated", onCustomEvent as EventListener);
-    };
-  }, []);
+  useEffect(() => {}, []);
 
   const todayRaw = useMemo(
     () => matches.filter((m) => (m.date ? m.date === todayISO : true)),

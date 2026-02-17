@@ -1,6 +1,6 @@
 import { TodaysMatchesSection } from "@/components/TodaysMatchesSection";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Ad = {
   id: string;
@@ -13,6 +13,27 @@ type Ad = {
   ad_script?: string;
   active?: boolean;
 };
+
+function AdScriptRenderer({ html }: { html: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.innerHTML = "";
+    const srcMatch = html.match(/<script[^>]*src=["']([^"']+)["'][^>]*><\/script>/i);
+    if (srcMatch && srcMatch[1]) {
+      const s = document.createElement("script");
+      s.src = srcMatch[1];
+      s.async = true;
+      el.appendChild(s);
+    } else {
+      const s = document.createElement("script");
+      s.text = html;
+      el.appendChild(s);
+    }
+  }, [html]);
+  return <div ref={ref} />;
+}
 
 const Index = () => {
   const [ads, setAds] = useState<Ad[]>([]);
@@ -37,7 +58,7 @@ const Index = () => {
             active: !!a.active,
           };
         });
-        console.log("Ads loaded from DB", mapped);
+        console.log("LOG: Ads from DB ->", mapped);
         setAds(mapped);
       }
     })().catch(() => void 0);
@@ -58,7 +79,7 @@ const Index = () => {
       return <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>;
     }
     if (a.type === "script" && a.ad_script) {
-      return <div dangerouslySetInnerHTML={{ __html: a.ad_script }} />;
+      return <AdScriptRenderer html={a.ad_script} />;
     }
     return null;
   }

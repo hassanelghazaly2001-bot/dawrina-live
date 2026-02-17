@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { fetchFixturesForLeagues } from "@/services/footballService";
 import { MatchCard } from "@/components/MatchCard";
@@ -8,6 +8,26 @@ import { CalendarDays, AlertCircle, Loader2 } from "lucide-react";
 import { FeaturedMatchCard } from "@/components/FeaturedMatchCard";
 import { supabase } from "@/lib/supabase";
 
+function AdScriptRenderer({ html }: { html: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.innerHTML = "";
+    const srcMatch = html.match(/<script[^>]*src=["']([^"']+)["'][^>]*><\/script>/i);
+    if (srcMatch && srcMatch[1]) {
+      const s = document.createElement("script");
+      s.src = srcMatch[1];
+      s.async = true;
+      el.appendChild(s);
+    } else {
+      const s = document.createElement("script");
+      s.text = html;
+      el.appendChild(s);
+    }
+  }, [html]);
+  return <div ref={ref} />;
+}
 type DateTab = "yesterday" | "today" | "tomorrow";
 
 const DATE_TABS: { id: Exclude<DateTab, "yesterday">; label: string; offset: number }[] = [
@@ -438,7 +458,7 @@ export function TodaysMatchesSection() {
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
                 ) : a.type === "script" && a.ad_script ? (
-                  <div dangerouslySetInnerHTML={{ __html: a.ad_script }} />
+                  <AdScriptRenderer html={a.ad_script} />
                 ) : null}
               </div>
             ))}

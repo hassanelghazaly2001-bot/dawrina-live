@@ -618,34 +618,24 @@ const AdminDashboard = () => {
   console.log("ADMIN_DASHBOARD_RENDER", { authed, matchesCount: matches.length, showNew });
   if (!authed) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm">
-          <div className="container flex items-center gap-4 py-4">
-            <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">{t.back}</Link>
-            <div className="h-4 w-px bg-border" />
-            <span className="text-sm text-muted-foreground">Admin Login</span>
-          </div>
-        </header>
-        <main className="container py-10">
-          <div className="mx-auto max-w-sm rounded-xl border border-border bg-card/40 p-4">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Enter Admin Code</h2>
-            <input
-              type="password"
-              className="mb-2 w-full rounded-md border bg-card p-2 text-sm"
-              placeholder="Admin Code"
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={handleLogin}
-              className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Submit
-            </button>
-            {err && <p className="mt-2 text-center text-sm text-red-500">{err}</p>}
-          </div>
-        </main>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="mx-auto max-w-sm rounded-xl border border-border bg-card/40 p-4 w-full">
+          <input
+            type="password"
+            className="mb-2 w-full rounded-md border bg-card p-2 text-sm"
+            placeholder="Admin Code"
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={handleLogin}
+            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            دخول
+          </button>
+          {err && <p className="mt-2 text-center text-sm text-red-500">{err}</p>}
+        </div>
       </div>
     );
   }

@@ -163,7 +163,9 @@ const AdminDashboard = () => {
   }, [authed]);
   useEffect(() => {
     async function loadAds() {
-      const { data, error } = await supabase.from("ads").select("*");
+      const { data, error } = await supabase
+        .from("ads")
+        .select("id, title, image_url, link_url, type, placement, ad_id, ad_script, active");
       if (!error && Array.isArray(data)) {
         setAds(
           data.map((a: { id: number | string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }) => ({

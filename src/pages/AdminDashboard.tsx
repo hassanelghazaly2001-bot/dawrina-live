@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
  
 
 const AdminDashboard = () => {
-  const ADMIN_BYPASS = true;
+  const ADMIN_BYPASS = false;
   const [authed, setAuthed] = useState(false);
   const [pwd, setPwd] = useState("");
   const [err, setErr] = useState<string | null>(null);
@@ -84,22 +84,18 @@ const AdminDashboard = () => {
  
 
   useEffect(() => {
-    if (ADMIN_BYPASS) {
-      setAuthed(true);
-    } else {
-      try {
-        const raw = window.localStorage.getItem("admin-auth");
-        if (raw) {
-          const obj = JSON.parse(raw) as { valid: boolean; expiresAt: number };
-          if (obj.valid && obj.expiresAt > Date.now()) {
-            setAuthed(true);
-          }
+    try {
+      const raw = window.localStorage.getItem("admin-auth");
+      if (raw) {
+        const obj = JSON.parse(raw) as { valid: boolean; expiresAt: number };
+        if (obj.valid && obj.expiresAt > Date.now()) {
+          setAuthed(true);
         }
-      } catch {
-        void 0;
       }
+    } catch {
+      void 0;
     }
-  }, [ADMIN_BYPASS]);
+  }, []);
 
   useEffect(() => {
     if (!authed) return;
@@ -170,13 +166,16 @@ const AdminDashboard = () => {
       const { data, error } = await supabase.from("ads").select("*");
       if (!error && Array.isArray(data)) {
         setAds(
-          data.map((a: { id: string; title?: string; image_url?: string; link_url?: string; position?: string; active?: boolean }) => ({
+          data.map((a: { id: number | string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }) => ({
             id: String(a.id),
             title: a.title,
             image_url: a.image_url,
             link_url: a.link_url,
-            position: a.position,
             active: !!a.active,
+            type: a.type ?? "image",
+            ad_id: a.ad_id,
+            ad_script: a.ad_script,
+            placement: a.placement ?? "header",
           }))
         );
       }
@@ -218,9 +217,9 @@ const AdminDashboard = () => {
 
   function handleLogin() {
     setErr(null);
-    if (pwd === "admin2001") {
+    if (pwd === "260501") {
       setAuthed(true);
-      const expiresAt = Date.now() + 1000 * 60 * 60 * 6;
+      const expiresAt = Date.now() + 1000 * 60 * 60 * 12;
       window.localStorage.setItem("admin-auth", JSON.stringify({ valid: true, expiresAt }));
       return;
     }
@@ -559,7 +558,7 @@ const AdminDashboard = () => {
   }
 
   console.log("ADMIN_DASHBOARD_RENDER", { authed, matchesCount: matches.length, showNew });
-  if (!authed && !ADMIN_BYPASS) {
+  if (!authed) {
     return (
       <div className="min-h-screen bg-background">
         <header className="border-b border-border bg-card/50 backdrop-blur-sm">
@@ -571,11 +570,11 @@ const AdminDashboard = () => {
         </header>
         <main className="container py-10">
           <div className="mx-auto max-w-sm rounded-xl border border-border bg-card/40 p-4">
-            <h2 className="mb-3 text-sm font-semibold text-foreground">Enter Password</h2>
+            <h2 className="mb-3 text-sm font-semibold text-foreground">Enter Admin Code</h2>
             <input
               type="password"
               className="mb-2 w-full rounded-md border bg-card p-2 text-sm"
-              placeholder="Password"
+              placeholder="Admin Code"
               value={pwd}
               onChange={(e) => setPwd(e.target.value)}
             />
@@ -584,7 +583,7 @@ const AdminDashboard = () => {
               onClick={handleLogin}
               className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
-              Login
+              Submit
             </button>
             {err && <p className="mt-2 text-center text-sm text-red-500">{err}</p>}
           </div>

@@ -8,7 +8,6 @@ const MatchPage = () => {
   const params = useParams();
   const id = params.id ?? "";
   const [match, setMatch] = React.useState<Match | null>(null);
-  const [streams, setStreams] = React.useState<string[]>([]);
   const pandaBase = "https://p4.pandalive.live/albaplayer/";
   const starzBase = "https://a.yallashoot2026.com/albaplayer/";
   const iframeSrc = useMemo(() => {
@@ -29,13 +28,6 @@ const MatchPage = () => {
         setMatch(m);
       })
       .catch(() => void 0);
-    try {
-      const raw = window.localStorage.getItem(`match-streams:${id}`);
-      const arr = raw ? ((JSON.parse(raw) as string[]) ?? []) : [];
-      setStreams(arr);
-    } catch {
-      setStreams([]);
-    }
     return () => {
       mounted = false;
     };
@@ -73,11 +65,11 @@ const MatchPage = () => {
               </div>
             </div>
           ) : (
-            <VideoPlayer streamUrls={streams.length ? streams : (match?.streamUrl ? [match.streamUrl] : [])} initialIndex={0} />
+            <VideoPlayer streamUrls={match?.streamUrl ? [match.streamUrl] : []} initialIndex={0} />
           )}
-          {streams.length > 1 && (
+          {Array.isArray(match?.streamUrl ? [match.streamUrl] : []) && (match?.streamUrl ? [match.streamUrl] : []).length > 1 && (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {streams.map((s, idx) => (
+              {(match?.streamUrl ? [match.streamUrl] : []).map((s, idx) => (
                 <a key={idx} href={s} target="_blank" rel="noreferrer" className="rounded-md border px-3 py-2 text-xs text-muted-foreground hover:text-foreground">
                   رابط {idx + 1}
                 </a>

@@ -1,58 +1,64 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { t } from "@/lib/i18n";
+import { supabase } from "@/lib/supabase";
 
 const AdminStreams = () => {
   const [status, setStatus] = useState<string | null>(null);
-  const [matches, setMatches] = useState<{ id: string; homeTeam: string; awayTeam: string; league: string; time: string; status: "live" | "upcoming" | "finished" }[]>([]);
-  const [entries, setEntries] = useState<Record<string, string[]>>({});
+  const [matches, setMatches] = useState<{ id: string; homeTeam: string; awayTeam: string; league: string; time: string; status: "live" | "upcoming" | "finished"; liveUrl?: string }[]>([]);
+  const [entries, setEntries] = useState<Record<string, string>>({});
   const [statuses, setStatuses] = useState<Record<string, "live" | "upcoming" | "finished">>({});
 
   useEffect(() => {
-    try {
-      const rawList = window.localStorage.getItem("custom-matches");
-      if (rawList) {
-        const arr = JSON.parse(rawList) as typeof matches;
-        setMatches(Array.isArray(arr) ? arr : []);
-      } else {
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase.from("matches").select("*");
+      if (!mounted) return;
+      if (error || !Array.isArray(data)) {
         setMatches([]);
+        return;
       }
-    } catch {
-      setMatches([]);
-    }
+      setMatches(
+        data.map((row: { [k: string]: unknown }) => ({
+          id: String(row.id),
+          homeTeam: String(row.home_team ?? ""),
+          awayTeam: String(row.away_team ?? ""),
+          league: String(row.league ?? ""),
+          time: String(row.time ?? ""),
+          status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+          liveUrl: (row.live_url as string | undefined) ?? "",
+        }))
+      );
+    })().catch(() => setMatches([]));
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    const initial: Record<string, string[]> = {};
+    const initial: Record<string, string> = {};
     const initialStatuses: Record<string, "live" | "upcoming" | "finished"> = {};
     for (const m of matches) {
-      try {
-        const raw = window.localStorage.getItem(`match-streams:${m.id}`);
-        initial[m.id] = raw ? (JSON.parse(raw) as string[]) : ["", "", "", ""];
-      } catch {
-        initial[m.id] = ["", "", "", ""];
-      }
-      const st = window.localStorage.getItem(`match-status:${m.id}`);
-      initialStatuses[m.id] =
-        st === "live" || st === "upcoming" || st === "finished" ? (st as "live" | "upcoming" | "finished") : m.status;
+      initial[m.id] = m.liveUrl ?? "";
+      initialStatuses[m.id] = m.status;
     }
     setEntries(initial);
     setStatuses(initialStatuses);
   }, [matches]);
 
-  function updateEntry(id: string, idx: number, value: string) {
-    setEntries((prev) => {
-      const arr = prev[id] ? [...prev[id]] : ["", "", "", ""];
-      arr[idx] = value;
-      return { ...prev, [id]: arr };
-    });
+  function updateEntry(id: string, _idx: number, value: string) {
+    setEntries((prev) => ({ ...prev, [id]: value }));
   }
 
-  function save(id: string) {
+  async function save(id: string) {
     setStatus(null);
-    const arr = (entries[id] ?? []).map((s) => s.trim()).filter((s) => s.length > 0);
-    window.localStorage.setItem(`match-streams:${id}`, JSON.stringify(arr));
-    window.localStorage.setItem(`match-status:${id}`, statuses[id]);
+    const live_url = (entries[id] ?? "").trim() || null;
+    const statusVal = statuses[id] ?? "upcoming";
+    const { error } = await supabase.from("matches").update({ live_url, status: statusVal }).eq("id", id);
+    if (error) {
+      setStatus(error.message || "تعذر الحفظ");
+      return;
+    }
     setStatus("Saved");
   }
 

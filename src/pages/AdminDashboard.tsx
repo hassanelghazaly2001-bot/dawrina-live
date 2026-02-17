@@ -282,14 +282,20 @@ const AdminDashboard = () => {
     const stadium = getVal("stadium");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
     (async () => {
+      const league_logo = getVal("leagueLogo");
+      const stream1 = getVal("stream1");
       const row = {
         home_team: homeTeam || null,
         away_team: awayTeam || null,
         logo_home: homeLogo || null,
         logo_away: awayLogo || null,
         league: league || null,
+        league_logo: league_logo || null,
         date: date || null,
         time: time || null,
+        channel: (otherSlug || channelSlug) || null,
+        commentator: commentator || null,
+        live_url: stream1 || null,
         status: statusVal || "upcoming",
         active: true,
       };
@@ -307,17 +313,15 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
+            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: row.channel_slug ?? undefined,
-            backupIframe: row.backup_iframe ?? undefined,
-            playerServer: row.player_server ?? undefined,
-            homeLogo: row.home_logo ?? undefined,
-            awayLogo: row.away_logo ?? undefined,
-            tvChannel: row.tv_channel ?? undefined,
-            commentator: row.commentator ?? undefined,
-            stadium: row.stadium ?? undefined,
+            channelSlug: (row.channel as string | undefined) ?? undefined,
+            homeLogo: (row.logo_home as string | undefined) ?? undefined,
+            awayLogo: (row.logo_away as string | undefined) ?? undefined,
+            streamUrl: (row.live_url as string | undefined) ?? "",
+            commentator: (row.commentator as string | undefined) ?? undefined,
           }))
         );
       }
@@ -377,8 +381,12 @@ const AdminDashboard = () => {
       logo_home: match.homeLogo ?? null,
       logo_away: match.awayLogo ?? null,
       league: match.league || null,
+      league_logo: match.leagueIcon ?? null,
       time: match.time || null,
       date: match.date ?? null,
+      channel: match.channelSlug ?? null,
+      commentator: match.commentator ?? null,
+      live_url: match.streamUrl || null,
       status: match.status || "upcoming",
       active: true,
     };
@@ -413,6 +421,7 @@ const AdminDashboard = () => {
     const dateVal = `${y}-${m}-${day}`;
     const newId = `${homeTeam}-${awayTeam}-${dateVal}-${time}`;
     const edited = editingId;
+    const leagueIcon = String(fd.get("leagueLogo") ?? "").trim() || undefined;
     const otherSlug = String(fd.get("otherSlug") ?? "").trim();
     const channelSlug = (otherSlug || String(fd.get("channelSlug") ?? "").trim()) || undefined;
     const backupIframe = String(fd.get("backupIframe") ?? "").trim() || undefined;
@@ -429,25 +438,27 @@ const AdminDashboard = () => {
         return;
       }
     }
+    const tvChannel = String(fd.get("tvChannel") ?? "").trim();
+    const commentator = String(fd.get("commentator") ?? "").trim();
+    const stream1 = String(fd.get("stream1") ?? "").trim();
     const match: Match = {
       id: newId,
       homeTeam,
       awayTeam,
       league,
+      leagueIcon,
       date: dateVal,
       time,
       status: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished"),
-      streamUrl: "",
+      streamUrl: stream1 || "",
       channelSlug,
       backupIframe,
       playerServer,
       homeLogo: (String(fd.get("homeLogo") ?? "").trim() || undefined),
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
+      commentator,
     };
     await handleAddMatch(match);
-    const tvChannel = String(fd.get("tvChannel") ?? "").trim();
-    const commentator = String(fd.get("commentator") ?? "").trim();
-    const stadium = String(fd.get("stadium") ?? "").trim();
     const { data } = await supabase.from("matches").select("*");
     if (Array.isArray(data)) {
       setMatches(
@@ -456,17 +467,15 @@ const AdminDashboard = () => {
           homeTeam: row.home_team ?? "",
           awayTeam: row.away_team ?? "",
           league: row.league ?? "",
+          leagueIcon: (row.league_logo as string | undefined) ?? undefined,
           date: row.date ?? "",
           time: row.time ?? "",
           status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-          channelSlug: row.channel_slug ?? undefined,
-          backupIframe: row.backup_iframe ?? undefined,
-          playerServer: row.player_server ?? undefined,
-          homeLogo: row.home_logo ?? undefined,
-          awayLogo: row.away_logo ?? undefined,
-          tvChannel: row.tv_channel ?? undefined,
-          commentator: row.commentator ?? undefined,
-          stadium: row.stadium ?? undefined,
+          channelSlug: (row.channel as string | undefined) ?? undefined,
+          homeLogo: (row.logo_home as string | undefined) ?? undefined,
+          awayLogo: (row.logo_away as string | undefined) ?? undefined,
+          streamUrl: (row.live_url as string | undefined) ?? "",
+          commentator: (row.commentator as string | undefined) ?? undefined,
         }))
       );
     }
@@ -503,17 +512,15 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
+            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: row.channel_slug ?? undefined,
-            backupIframe: row.backup_iframe ?? undefined,
-            playerServer: row.player_server ?? undefined,
-            homeLogo: row.home_logo ?? undefined,
-            awayLogo: row.away_logo ?? undefined,
-            tvChannel: row.tv_channel ?? undefined,
-            commentator: row.commentator ?? undefined,
-            stadium: row.stadium ?? undefined,
+            channelSlug: (row.channel as string | undefined) ?? undefined,
+            homeLogo: (row.logo_home as string | undefined) ?? undefined,
+            awayLogo: (row.logo_away as string | undefined) ?? undefined,
+            streamUrl: (row.live_url as string | undefined) ?? "",
+            commentator: (row.commentator as string | undefined) ?? undefined,
           }))
         );
       }
@@ -544,17 +551,15 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
+            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: row.channel_slug ?? undefined,
-            backupIframe: row.backup_iframe ?? undefined,
-            playerServer: row.player_server ?? undefined,
-            homeLogo: row.home_logo ?? undefined,
-            awayLogo: row.away_logo ?? undefined,
-            tvChannel: row.tv_channel ?? undefined,
-            commentator: row.commentator ?? undefined,
-            stadium: row.stadium ?? undefined,
+            channelSlug: (row.channel as string | undefined) ?? undefined,
+            homeLogo: (row.logo_home as string | undefined) ?? undefined,
+            awayLogo: (row.logo_away as string | undefined) ?? undefined,
+            streamUrl: (row.live_url as string | undefined) ?? "",
+            commentator: (row.commentator as string | undefined) ?? undefined,
             isTopMatch: Boolean(row.is_top_match ?? false),
           }))
         );

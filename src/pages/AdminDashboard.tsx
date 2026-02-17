@@ -252,8 +252,9 @@ const AdminDashboard = () => {
     });
   }
 
-  function save(id: string) {
-    setStatus(null);
+  async function save(id: string) {
+    setStatus("Saving...");
+    alert("Saving...");
     const getVal = (name: string) =>
       (document.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"][data-id="${id}"]`)?.value ?? "").trim();
     const homeTeam = getVal("homeTeam");
@@ -281,31 +282,27 @@ const AdminDashboard = () => {
     const commentator = getVal("commentator");
     const stadium = getVal("stadium");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
-    (async () => {
-      const league_logo = getVal("leagueLogo");
-      const stream1 = getVal("stream1");
-      const row = {
-        home_team: homeTeam || null,
-        away_team: awayTeam || null,
-        logo_home: homeLogo || null,
-        logo_away: awayLogo || null,
-        league: league || null,
-        league_logo: league_logo || null,
-        date: selectedDate,
-        time: time || null,
-        channel: (otherSlug || channelSlug) || null,
-        commentator: commentator || null,
-        live_url: stream1 || null,
-        status: statusVal || "upcoming",
-        active: true,
-      };
-      console.log("Sending to Supabase:", row);
-      const { error } = await supabase.from("matches").insert([row]);
-      if (error) {
-        alert(error.message || "تعذر حفظ المباراة");
-        return;
-      }
-      console.log("SUPABASE_MATCH_SAVED", row);
+    const league_logo = getVal("leagueLogo");
+    const cleanPayload = {
+      home_team: homeTeam || null,
+      away_team: awayTeam || null,
+      logo_home: homeLogo || null,
+      logo_away: awayLogo || null,
+      league: league || null,
+      league_logo: league_logo || null,
+      time: time || null,
+      date: selectedDate,
+      channel: (otherSlug || channelSlug) || null,
+      commentator: commentator || null,
+      live_url: stream1 || null,
+      status: statusVal || "upcoming",
+      active: true,
+    };
+    console.log("Sending to Supabase:", cleanPayload);
+    try {
+      const { error } = await supabase.from("matches").insert([cleanPayload]);
+      if (error) throw error;
+      console.log("SUPABASE_MATCH_SAVED", cleanPayload);
       const { data } = await supabase.from("matches").select("*");
       if (Array.isArray(data)) {
         setMatches(
@@ -326,8 +323,12 @@ const AdminDashboard = () => {
           }))
         );
       }
-    })().catch(() => void 0);
-    setStatus("Saved");
+      setStatus("Saved");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "تعذر حفظ المباراة";
+      alert(msg);
+      setStatus(msg);
+    }
   }
 
   function updateMeta(id: string, key: "tvChannel" | "commentator" | "stadium", value: string) {
@@ -405,6 +406,9 @@ const AdminDashboard = () => {
 
   async function addNewMatch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    console.log("Button clicked, data:", formData);
+    alert("Saving...");
+    setStatus("Saving...");
     const fd = new FormData(e.currentTarget);
     const homeTeam = String(fd.get("homeTeam") ?? "").trim();
     const awayTeam = String(fd.get("awayTeam") ?? "").trim();
@@ -453,31 +457,38 @@ const AdminDashboard = () => {
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
       commentator,
     };
-    const insertedId = await handleAddMatch(match);
-    const { data } = await supabase.from("matches").select("*");
-    if (Array.isArray(data)) {
-      setMatches(
-        data.map((row: { [k: string]: unknown }) => ({
-          id: String(row.id),
-          homeTeam: row.home_team ?? "",
-          awayTeam: row.away_team ?? "",
-          league: row.league ?? "",
-          leagueIcon: (row.league_logo as string | undefined) ?? undefined,
-          date: row.date ?? "",
-          time: row.time ?? "",
-          status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-          channelSlug: (row.channel as string | undefined) ?? undefined,
-          homeLogo: (row.logo_home as string | undefined) ?? undefined,
-          awayLogo: (row.logo_away as string | undefined) ?? undefined,
-          streamUrl: (row.live_url as string | undefined) ?? "",
-          commentator: (row.commentator as string | undefined) ?? undefined,
-        }))
-      );
-    }
-    if (insertedId) {
-      setEntries((prev) => ({ ...prev, [insertedId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
-      setStatuses((prev) => ({ ...prev, [insertedId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
-      setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel, commentator, stadium } }));
+    try {
+      const insertedId = await handleAddMatch(match);
+      const { data } = await supabase.from("matches").select("*");
+      if (Array.isArray(data)) {
+        setMatches(
+          data.map((row: { [k: string]: unknown }) => ({
+            id: String(row.id),
+            homeTeam: row.home_team ?? "",
+            awayTeam: row.away_team ?? "",
+            league: row.league ?? "",
+            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+            date: row.date ?? "",
+            time: row.time ?? "",
+            status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
+            channelSlug: (row.channel as string | undefined) ?? undefined,
+            homeLogo: (row.logo_home as string | undefined) ?? undefined,
+            awayLogo: (row.logo_away as string | undefined) ?? undefined,
+            streamUrl: (row.live_url as string | undefined) ?? "",
+            commentator: (row.commentator as string | undefined) ?? undefined,
+          }))
+        );
+      }
+      if (insertedId) {
+        setEntries((prev) => ({ ...prev, [insertedId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
+        setStatuses((prev) => ({ ...prev, [insertedId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
+        setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel, commentator, stadium } }));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "تعذر حفظ المباراة";
+      alert(msg);
+      setStatus(msg);
+      return;
     }
     if (formRef.current) formRef.current.reset();
     setSelectedDate("today");

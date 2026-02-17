@@ -27,6 +27,7 @@ const AdminDashboard = () => {
   const [adminChannelFilter, setAdminChannelFilter] = useState<"all" | "bein" | "ssc" | "others">("all");
   const [selectedServer, setSelectedServer] = useState<"panda" | "starz">("panda");
   const [selectedDate, setSelectedDate] = useState<"today" | "tomorrow">("today");
+  const [isSaving, setIsSaving] = useState(false);
   const [ads, setAds] = useState<{ id: string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }[]>([]);
   const [showAdForm, setShowAdForm] = useState(false);
   const adFormRef = useRef<HTMLFormElement | null>(null);
@@ -253,8 +254,9 @@ const AdminDashboard = () => {
   }
 
   async function save(id: string) {
+    if (isSaving) return;
+    setIsSaving(true);
     setStatus("Saving...");
-    alert("Saving...");
     const getVal = (name: string) =>
       (document.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"][data-id="${id}"]`)?.value ?? "").trim();
     const homeTeam = getVal("homeTeam");
@@ -328,6 +330,8 @@ const AdminDashboard = () => {
       const msg = err instanceof Error ? err.message : "تعذر حفظ المباراة";
       alert(msg);
       setStatus(msg);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -406,8 +410,9 @@ const AdminDashboard = () => {
 
   async function addNewMatch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSaving) return;
+    setIsSaving(true);
     console.log("Button clicked, data:", formData);
-    alert("Saving...");
     setStatus("Saving...");
     const fd = new FormData(e.currentTarget);
     const homeTeam = String(fd.get("homeTeam") ?? "").trim();
@@ -489,6 +494,8 @@ const AdminDashboard = () => {
       alert(msg);
       setStatus(msg);
       return;
+    } finally {
+      setIsSaving(false);
     }
     if (formRef.current) formRef.current.reset();
     setSelectedDate("today");
@@ -844,8 +851,15 @@ const AdminDashboard = () => {
                 </select>
               </div>
               <div className="col-span-full">
-                <button type="submit" className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90">
-                  {editingId ? "تحديث" : "حفظ"}
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className={[
+                    "rounded-md px-3 py-1.5 text-xs font-medium",
+                    isSaving ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-primary text-primary-foreground hover:bg-primary/90",
+                  ].join(" ")}
+                >
+                  {isSaving ? "جارٍ الحفظ..." : (editingId ? "تحديث" : "حفظ")}
                 </button>
               </div>
             </form>

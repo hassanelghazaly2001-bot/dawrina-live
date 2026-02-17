@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./lib/global-error-guard";
-import "./lib/safe-share-modal";
 
 try {
   const el = document.getElementById("root");

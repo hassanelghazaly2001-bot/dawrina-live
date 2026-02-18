@@ -172,7 +172,7 @@ const AdminDashboard = () => {
     async function loadAds() {
       const { data, error } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, position, is_active, ad_id, ad_script");
+        .select("id, title, image_url, link_url, type, placement, position, is_active, ad_id, ad_script, code_html");
       if (!error && Array.isArray(data)) {
         type SupabaseAdRow = {
           id: number | string;
@@ -196,6 +196,7 @@ const AdminDashboard = () => {
             type: a.type ?? "image",
             placement: (a.placement ?? a.position ?? "header") as "header" | "sidebar" | "inline",
             ad_id: a.ad_id ?? undefined,
+            ad_script: a.ad_script ?? undefined,
             ad_script: a.ad_script ?? undefined,
           }))
         );
@@ -384,6 +385,7 @@ const AdminDashboard = () => {
       link_url: type === "image" ? (link_url || null) : null,
       ad_id: type === "id" ? (ad_id ?? null) : null,
       ad_script: type === "script" ? (ad_script || null) : null,
+      code_html: type === "script" ? (ad_script || null) : null,
       is_active: !!active,
     };
     const { data, error } = await supabase.from("ads").update(payload).eq("id", id).select("*").single();
@@ -1194,6 +1196,7 @@ const AdminDashboard = () => {
                     link_url: type === "image" ? (link_url || null) : null,
                     ad_id: type === "id" ? (ad_id_raw ? Number.parseInt(ad_id_raw, 10) : null) : null,
                     ad_script: type === "script" ? (script || null) : null,
+                    code_html: type === "script" ? (script || null) : null,
                     is_active: active,
                   };
                   const { data, error } = await supabase.from("ads").insert(payload).select("*").single();

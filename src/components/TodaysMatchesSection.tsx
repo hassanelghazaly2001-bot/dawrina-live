@@ -229,7 +229,7 @@ export function TodaysMatchesSection() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; ad_script?: string; active?: boolean }[]>([]);
+  const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "script" | "id"; image_url?: string; link_url?: string; ad_script?: string; code_html?: string; ad_id?: number; active?: boolean }[]>([]);
 
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
   const todayISO = useMemo(() => {
@@ -268,20 +268,35 @@ export function TodaysMatchesSection() {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, active")
-        .eq("active", true)
+        .select("id, title, image_url, link_url, type, placement, position, is_active, ad_id, ad_script, code_html")
+        .eq("is_active", true)
         .eq("placement", "sidebar");
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; active?: boolean };
+            const a = raw as {
+              id: number | string;
+              title?: string;
+              type?: "image" | "script" | "id";
+              image_url?: string;
+              link_url?: string;
+              is_active?: boolean;
+              placement?: "header" | "sidebar" | "inline";
+              position?: "header" | "sidebar" | "inline";
+              ad_id?: number;
+              ad_script?: string;
+              code_html?: string;
+            };
             return {
               id: String(a.id),
               title: a.title,
               type: a.type,
               image_url: a.image_url,
               link_url: a.link_url,
-              active: !!a.active,
+              ad_id: a.ad_id,
+              ad_script: a.ad_script,
+              code_html: a.code_html,
+              active: !!a.is_active,
             };
           })
         );
@@ -446,8 +461,8 @@ export function TodaysMatchesSection() {
                   )
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
-                ) : a.type === "script" && a.ad_script ? (
-                  <AdScriptRenderer html={a.ad_script} />
+                ) : a.type === "script" && (a.code_html || a.ad_script) ? (
+                  <div dangerouslySetInnerHTML={{ __html: String(a.code_html || a.ad_script) }} />
                 ) : null}
               </div>
             ))}

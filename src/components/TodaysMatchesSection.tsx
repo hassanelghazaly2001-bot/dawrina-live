@@ -268,7 +268,7 @@ export function TodaysMatchesSection() {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, redirect_url, type, position, is_active, ad_script, code_html")
+        .select("ad_id, title, image_url, redirect_url, type, position, is_active, ad_script, code_html")
         .eq("is_active", true)
         .eq("position", "sidebar");
       if (Array.isArray(data)) {
@@ -287,7 +287,7 @@ export function TodaysMatchesSection() {
               code_html?: string;
             };
             return {
-              id: String(a.id),
+              id: String(a.ad_id),
               title: a.title,
               type: a.type,
               image_url: a.image_url,

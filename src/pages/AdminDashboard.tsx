@@ -172,10 +172,10 @@ const AdminDashboard = () => {
     async function loadAds() {
       const { data, error } = await supabase
         .from("ads")
-        .select("id, title, image_url, redirect_url, type, position, is_active, code_html");
+        .select("ad_id, title, image_url, redirect_url, type, position, is_active, code_html");
       if (!error && Array.isArray(data)) {
         type SupabaseAdRow = {
-          id: number | string;
+          ad_id: number | string;
           title?: string;
           image_url?: string;
           redirect_url?: string;
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
         };
         setAds(
           (data as SupabaseAdRow[]).map((a) => ({
-            id: String(a.id),
+            id: String(a.ad_id),
             title: a.title,
             image_url: a.image_url,
             link_url: a.redirect_url,
@@ -200,7 +200,7 @@ const AdminDashboard = () => {
         const typesInit: Record<string, "image" | "id" | "script"> = {};
         const placementsInit: Record<string, "header" | "sidebar" | "inline"> = {};
         for (const a of data as SupabaseAdRow[]) {
-          const idStr = String(a.id);
+          const idStr = String(a.ad_id);
           typesInit[idStr] = a.type ?? "image";
           placementsInit[idStr] = (a.position ?? "header") as "header" | "sidebar" | "inline";
         }
@@ -388,7 +388,7 @@ const AdminDashboard = () => {
     };
     // eslint-disable-next-line no-console
     console.log("Attempting to save to Supabase...");
-    const { data, error } = await supabase.from("ads").update(payload).eq("id", id).select("*").single();
+    const { data, error } = await supabase.from("ads").update(payload).eq("ad_id", id).select("*").single();
     if (error) {
       // eslint-disable-next-line no-console
       console.error("Supabase Error Details:", error);
@@ -406,7 +406,7 @@ const AdminDashboard = () => {
               id,
               title: (data as { title?: string }).title,
               image_url: (data as { image_url?: string }).image_url,
-              link_url: (data as { link_url?: string }).link_url,
+              link_url: (data as { redirect_url?: string }).redirect_url,
               active: !!(data as { is_active?: boolean }).is_active,
               type: (data as { type?: "image" | "id" | "script" }).type,
               placement: ((data as { placement?: "header" | "sidebar" | "inline"; position?: "header" | "sidebar" | "inline" }).placement ??
@@ -1211,7 +1211,7 @@ const AdminDashboard = () => {
                     // eslint-disable-next-line no-console
                     console.log("Success! Data saved:", data);
                     setAds((prev) => [...prev, {
-                      id: String(data.id),
+                      id: String((data as { ad_id?: number | string }).ad_id),
                       title: (data as { title?: string }).title,
                       image_url: (data as { image_url?: string }).image_url,
                       link_url: (data as { redirect_url?: string }).redirect_url,
@@ -1348,7 +1348,7 @@ const AdminDashboard = () => {
                               className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
                               onClick={() => {
                                 (async () => {
-                                  const { error } = await supabase.from("ads").delete().eq("id", a.id);
+                                  const { error } = await supabase.from("ads").delete().eq("ad_id", a.id);
                                   if (!error) {
                                     setAds((prev) => prev.filter((x) => x.id !== a.id));
                                     setStatus("تم حذف الإعلان");

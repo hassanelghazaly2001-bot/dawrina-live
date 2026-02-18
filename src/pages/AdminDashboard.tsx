@@ -406,9 +406,11 @@ const AdminDashboard = () => {
       alert("يرجى إدخال كود الإعلان");
       return;
     }
+    const pos = (placement || "header").toLowerCase();
+    const normPos = pos === "header" || pos === "sidebar" || pos === "inline" ? pos : "header";
     const payload = {
       title: title || null,
-      position: placement,
+      position: normPos,
       type,
       image_url: type === "image" ? (image_url || null) : null,
       redirect_url: type === "image" ? (link_url || null) : null,
@@ -1224,9 +1226,11 @@ const AdminDashboard = () => {
                 // eslint-disable-next-line no-console
                 console.log("Button clicked! Ad data (new):", adDataNew);
                 (async () => {
+                  const pos = (placement || "header").toLowerCase();
+                  const normPos = pos === "header" || pos === "sidebar" || pos === "inline" ? pos : "header";
                   const payload = {
                     title: title || null,
-                    position: placement,
+                    position: normPos,
                     type,
                     image_url: type === "image" ? (image_url || null) : null,
                     redirect_url: type === "image" ? (link_url || null) : null,

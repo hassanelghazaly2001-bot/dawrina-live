@@ -405,6 +405,7 @@ const AdminDashboard = () => {
       status: match.status || "upcoming",
       active: true,
     };
+    console.log("Sending to Supabase:", finalData);
     console.log("FINAL DATA TO SUPABASE:", finalData);
     const { data, error } = await supabase.from("matches").insert([finalData]).select("*");
     if (error || !Array.isArray(data) || data.length === 0) {

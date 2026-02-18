@@ -239,16 +239,14 @@ export function TodaysMatchesSection() {
         console.log("Final ad object to render:", { adId, html });
         const container = document.getElementById(`ad-${adId}`);
         if (!container) return;
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
+        if (container.innerHTML !== "") return;
         const frag = document.createRange().createContextualFragment(String(html));
         container.appendChild(frag);
       } catch {
         void 0;
       }
-    }, [adId, html]);
-    return <div id={`ad-${adId}`} data-ad-id={adId} />;
+    }, [adId]);
+    return <div id={`ad-${adId}`} data-ad-id={adId} className="min-h-[250px]" />;
   };
 
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
@@ -466,7 +464,7 @@ export function TodaysMatchesSection() {
               />
             )}
             {adsSidebar.map((a) => (
-              <div key={a.id} className="rounded-xl border border-border bg-card/40 p-3">
+              <div key={a.ad_id ?? a.id} className="rounded-xl border border-border bg-card/40 p-3 min-h-[250px]">
                 {a.type === "image" && a.image_url ? (
                   a.link_url ? (
                     <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">

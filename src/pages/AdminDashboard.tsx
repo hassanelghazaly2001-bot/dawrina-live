@@ -382,6 +382,7 @@ const AdminDashboard = () => {
       type,
       image_url: type === "image" ? (image_url || null) : null,
       redirect_url: type === "image" ? (link_url || null) : null,
+      ad_script: type === "script" ? (ad_script || null) : null,
       code_html: type === "script" ? (ad_script || null) : null,
       is_active: !!active,
     };
@@ -1199,6 +1200,7 @@ const AdminDashboard = () => {
                     type,
                     image_url: type === "image" ? (image_url || null) : null,
                     redirect_url: type === "image" ? (link_url || null) : null,
+                    ad_script: type === "script" ? (script || null) : null,
                     code_html: type === "script" ? (script || null) : null,
                     is_active: active,
                   };

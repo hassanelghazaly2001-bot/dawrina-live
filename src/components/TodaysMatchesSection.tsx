@@ -268,9 +268,9 @@ export function TodaysMatchesSection() {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, position, is_active, ad_id, ad_script, code_html")
+        .select("id, title, image_url, redirect_url, type, position, is_active, ad_script, code_html")
         .eq("is_active", true)
-        .eq("placement", "sidebar");
+        .eq("position", "sidebar");
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
@@ -279,9 +279,8 @@ export function TodaysMatchesSection() {
               title?: string;
               type?: "image" | "script" | "id";
               image_url?: string;
-              link_url?: string;
+              redirect_url?: string;
               is_active?: boolean;
-              placement?: "header" | "sidebar" | "inline";
               position?: "header" | "sidebar" | "inline";
               ad_id?: number;
               ad_script?: string;
@@ -292,7 +291,7 @@ export function TodaysMatchesSection() {
               title: a.title,
               type: a.type,
               image_url: a.image_url,
-              link_url: a.link_url,
+              link_url: a.redirect_url,
               ad_id: a.ad_id,
               ad_script: a.ad_script,
               code_html: a.code_html,

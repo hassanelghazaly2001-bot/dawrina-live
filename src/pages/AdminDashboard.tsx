@@ -33,6 +33,17 @@ const AdminDashboard = () => {
   const adFormRef = useRef<HTMLFormElement | null>(null);
   const [adTypeSelections, setAdTypeSelections] = useState<Record<string, "image" | "id" | "script">>({});
   const [placementSelections, setPlacementSelections] = useState<Record<string, "header" | "sidebar" | "inline">>({});
+  const [newAdForm, setNewAdForm] = useState({
+    title: "",
+    type: "image" as "image" | "id" | "script",
+    position: "header" as "header" | "sidebar" | "inline",
+    image_url: "",
+    redirect_url: "",
+    code_html: "",
+    ad_script: "",
+    active: false,
+  });
+  const [adRowEdits, setAdRowEdits] = useState<Record<string, { code_html?: string; ad_script?: string }>>({});
   const PANDA_SLUGS = [
     ...Array.from({ length: 10 }, (_, i) => `bein-${i + 1}`),
     ...Array.from({ length: 8 }, (_, i) => `ssc-${i + 1}`),
@@ -172,7 +183,7 @@ const AdminDashboard = () => {
     async function loadAds() {
       const { data, error } = await supabase
         .from("ads")
-        .select("ad_id, title, image_url, redirect_url, type, position, is_active, code_html");
+        .select("ad_id, title, image_url, redirect_url, type, position, is_active, ad_script, code_html");
       if (!error && Array.isArray(data)) {
         type SupabaseAdRow = {
           ad_id: number | string;
@@ -193,19 +204,25 @@ const AdminDashboard = () => {
             active: !!a.is_active,
             type: a.type ?? "image",
             placement: (a.position ?? "header") as "header" | "sidebar" | "inline",
-            ad_id: undefined,
-            ad_script: undefined,
+            ad_id: Number(a.ad_id),
+            ad_script: a.ad_script ?? undefined,
           }))
         );
         const typesInit: Record<string, "image" | "id" | "script"> = {};
         const placementsInit: Record<string, "header" | "sidebar" | "inline"> = {};
+        const editsInit: Record<string, { code_html?: string; ad_script?: string }> = {};
         for (const a of data as SupabaseAdRow[]) {
           const idStr = String(a.ad_id);
           typesInit[idStr] = a.type ?? "image";
           placementsInit[idStr] = (a.position ?? "header") as "header" | "sidebar" | "inline";
+          editsInit[idStr] = {
+            code_html: a.code_html ?? a.ad_script ?? "",
+            ad_script: a.ad_script ?? a.code_html ?? "",
+          };
         }
         setAdTypeSelections(typesInit);
         setPlacementSelections(placementsInit);
+        setAdRowEdits(editsInit);
       }
     }
     if (authed) {
@@ -368,7 +385,8 @@ const AdminDashboard = () => {
     const ad_id_raw = getVal("ad_ad_id");
     const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
     const active = getChecked("ad_active");
-    const ad_script = getValArea("ad_script");
+    const ad_script_state = adRowEdits[id]?.code_html ?? adRowEdits[id]?.ad_script ?? "";
+    const ad_script = ad_script_state || getValArea("ad_script");
     const adData = { title, type, placement, image_url, link_url, ad_id, active, ad_script };
     // eslint-disable-next-line no-console
     console.log("Button clicked! Ad data:", adData);
@@ -1195,13 +1213,13 @@ const AdminDashboard = () => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const title = String(fd.get("title") ?? "").trim();
-                const type = String(fd.get("ad_type") ?? "image") as "image" | "id" | "script";
-                const placement = String(fd.get("placement") ?? "header") as "header" | "sidebar" | "inline";
-                const image_url = String(fd.get("image_url") ?? "").trim();
-                const link_url = String(fd.get("link_url") ?? "").trim();
+                const type = String(fd.get("ad_type") ?? newAdForm.type) as "image" | "id" | "script";
+                const placement = String(fd.get("placement") ?? newAdForm.position) as "header" | "sidebar" | "inline";
+                const image_url = String(fd.get("image_url") ?? newAdForm.image_url).trim();
+                const link_url = String(fd.get("link_url") ?? newAdForm.redirect_url).trim();
                 const ad_id_raw = String(fd.get("ad_id") ?? "").trim();
-                const script = String(fd.get("ad_script") ?? "").trim();
-                const active = String(fd.get("active") ?? "false") === "on";
+                const script = String(newAdForm.code_html ?? "").trim();
+                const active = String(fd.get("active") ?? (newAdForm.active ? "on" : "off")) === "on";
                 const adDataNew = { title, type, placement, image_url, link_url, ad_id_raw, script, active };
                 // eslint-disable-next-line no-console
                 console.log("Button clicked! Ad data (new):", adDataNew);
@@ -1254,7 +1272,14 @@ const AdminDashboard = () => {
                 <input name="image_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط صورة الإعلان" />
                 <input name="link_url" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط التحويل عند الضغط" />
                 <input name="ad_id" className="rounded-md border bg-card p-2 text-sm" placeholder="معرّف الإعلان (رقمي)" />
-                <textarea name="ad_script" className="rounded-md border bg-card p-2 text-sm" placeholder="كود HTML/JS" rows={4} />
+                <textarea
+                  name="ad_script"
+                  className="rounded-md border bg-card p-2 text-sm"
+                  placeholder="كود HTML/JS"
+                  rows={4}
+                  value={newAdForm.code_html}
+                  onChange={(e) => setNewAdForm((prev) => ({ ...prev, code_html: e.target.value, ad_script: e.target.value }))}
+                />
                 <label className="inline-flex items-center gap-2 text-sm">
                   <input type="checkbox" name="active" />
                   فعال
@@ -1341,7 +1366,19 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-2">
                           {(adTypeSelections[a.id] ?? a.type ?? "image") === "script" && (
-                            <textarea name="ad_script" data-id={a.id} defaultValue={a.ad_script ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" rows={3} />
+                            <textarea
+                              name="ad_script"
+                              data-id={a.id}
+                              value={adRowEdits[a.id]?.code_html ?? ""}
+                              onChange={(e) =>
+                                setAdRowEdits((prev) => ({
+                                  ...prev,
+                                  [a.id]: { code_html: e.target.value, ad_script: e.target.value },
+                                }))
+                              }
+                              className="w-full rounded-md border bg-card p-2 text-sm"
+                              rows={3}
+                            />
                           )}
                         </td>
                         <td className="p-2">

@@ -160,22 +160,32 @@ const AdminDashboard = () => {
       mounted = false;
     };
   }, [authed]);
+
+  useEffect(() => {
+    // Remove any previously injected ad scripts when entering Admin
+    const scripts = Array.from(document.querySelectorAll('script[data-ad-script="true"]'));
+    for (const s of scripts) {
+      try {
+        s.remove();
+      } catch {
+        void 0;
+      }
+    }
+  }, []);
   useEffect(() => {
     async function loadAds() {
       const { data, error } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, ad_id, ad_script, active");
+        .select("id, title, image_url, link_url, type, placement, active");
       if (!error && Array.isArray(data)) {
         setAds(
-          data.map((a: { id: number | string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; ad_id?: number; ad_script?: string; placement?: "header" | "sidebar" | "inline" }) => ({
+          data.map((a: { id: number | string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline" }) => ({
             id: String(a.id),
             title: a.title,
             image_url: a.image_url,
             link_url: a.link_url,
             active: !!a.active,
             type: a.type ?? "image",
-            ad_id: a.ad_id,
-            ad_script: a.ad_script,
             placement: a.placement ?? "header",
           }))
         );
@@ -347,7 +357,6 @@ const AdminDashboard = () => {
     const link_url = getVal("ad_link_url");
     const ad_id_raw = getVal("ad_ad_id");
     const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
-    const ad_script = getValArea("ad_script");
     const active = getChecked("ad_active");
     if (!title || !type || !placement || (type === "image" && (!image_url || !link_url)) || (type === "id" && !ad_id_raw) || (type === "script" && !ad_script)) {
       alert("Please fill all fields");
@@ -359,7 +368,6 @@ const AdminDashboard = () => {
       placement,
       image_url: type === "image" ? (image_url || null) : null,
       link_url: type === "image" ? (link_url || null) : null,
-      ad_script: type === "script" ? (ad_script || null) : null,
       active: !!active,
     };
     const { error } = await supabase.from("ads").insert([payload]);
@@ -1112,7 +1120,6 @@ const AdminDashboard = () => {
                 const image_url = String(fd.get("image_url") ?? "").trim();
                 const link_url = String(fd.get("link_url") ?? "").trim();
                 const ad_id_raw = String(fd.get("ad_id") ?? "").trim();
-                const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
                 const script = String(fd.get("ad_script") ?? "").trim();
                 const active = String(fd.get("active") ?? "false") === "on";
                 (async () => {
@@ -1122,8 +1129,6 @@ const AdminDashboard = () => {
                     placement,
                     image_url: type === "image" ? (image_url || null) : null,
                     link_url: type === "image" ? (link_url || null) : null,
-                    ad_id: type === "id" ? (ad_id ?? null) : null,
-                    ad_script: type === "script" ? (script || null) : null,
                     active,
                   };
                   const { data, error } = await supabase.from("ads").insert(payload).select("*").single();
@@ -1135,8 +1140,6 @@ const AdminDashboard = () => {
                       link_url: data.link_url,
                       active: !!data.active,
                       type: data.type,
-                      ad_id: data.ad_id,
-                      ad_script: data.ad_script,
                       placement: data.placement,
                     }]);
                     setShowAdForm(false);

@@ -25,10 +25,12 @@ function AdScriptRenderer({ html }: { html: string }) {
       const s = document.createElement("script");
       s.src = srcMatch[1];
       s.async = true;
+      s.setAttribute("data-ad-script", "true");
       el.appendChild(s);
     } else {
       const s = document.createElement("script");
-      s.text = html;
+      s.text = `try{${html}}catch(e){}`;
+      s.setAttribute("data-ad-script", "true");
       el.appendChild(s);
     }
   }, [html]);
@@ -42,7 +44,7 @@ const Index = () => {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, ad_script, active")
+        .select("id, title, image_url, link_url, type, placement, active")
         .eq("active", true);
       if (Array.isArray(data)) {
         const mapped = data.map((raw: unknown) => {
@@ -54,7 +56,6 @@ const Index = () => {
             placement: a.placement,
             image_url: a.image_url,
             link_url: a.link_url,
-            ad_script: a.ad_script,
             active: !!a.active,
           };
         });

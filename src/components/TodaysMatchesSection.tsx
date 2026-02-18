@@ -268,20 +268,19 @@ export function TodaysMatchesSection() {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, ad_script, active")
+        .select("id, title, image_url, link_url, type, placement, active")
         .eq("active", true)
         .eq("placement", "sidebar");
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
-            const a = raw as { id: number | string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; ad_script?: string; active?: boolean };
+            const a = raw as { id: number | string; title?: string; type?: "image" | "script"; image_url?: string; link_url?: string; active?: boolean };
             return {
               id: String(a.id),
               title: a.title,
               type: a.type,
               image_url: a.image_url,
               link_url: a.link_url,
-              ad_script: a.ad_script,
               active: !!a.active,
             };
           })

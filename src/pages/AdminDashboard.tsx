@@ -289,6 +289,10 @@ const AdminDashboard = () => {
       channel: (otherSlug || channelSlug) || null,
       commentator: commentator || null,
       stream_server_1: stream1 || null,
+      stream_server_2: stream2 || null,
+      external_iframe: backupIframe || null,
+      server_slug: channelSlug || null,
+      stadium: stadium || null,
       status: statusVal || "upcoming",
       active: true,
     };
@@ -391,6 +395,10 @@ const AdminDashboard = () => {
       channel: match.channelSlug ?? null,
       commentator: match.commentator ?? null,
       stream_server_1: match.streamUrl || null,
+      stream_server_2: match.streamUrl2 ?? null,
+      external_iframe: match.backupIframe ?? null,
+      server_slug: match.channelSlug ?? null,
+      stadium: match.stadium ?? null,
       status: match.status || "upcoming",
       active: true,
     };
@@ -443,7 +451,9 @@ const AdminDashboard = () => {
     }
     const tvChannel = String(fd.get("tvChannel") ?? "").trim();
     const commentator = String(fd.get("commentator") ?? "").trim();
+    const stadium = String(fd.get("stadium") ?? "").trim();
     const stream1 = String(fd.get("stream1") ?? "").trim();
+    const stream2 = String(fd.get("stream2") ?? "").trim();
     const match: Match = {
       id: "",
       homeTeam,
@@ -454,12 +464,14 @@ const AdminDashboard = () => {
       time,
       status: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished"),
       streamUrl: stream1 || "",
+      streamUrl2: stream2 || "",
       channelSlug,
       backupIframe,
       playerServer,
       homeLogo: (String(fd.get("homeLogo") ?? "").trim() || undefined),
       awayLogo: (String(fd.get("awayLogo") ?? "").trim() || undefined),
       commentator,
+      stadium,
     };
     try {
       const insertedId = await handleAddMatch(match);
@@ -616,6 +628,7 @@ const AdminDashboard = () => {
       set("tvChannel", meta.tvChannel ?? "");
       set("commentator", meta.commentator ?? "");
       set("stadium", meta.stadium ?? "");
+        setFormData((prev) => ({ ...prev, stadium: meta.stadium ?? "" }));
       const today = new Date();
       const ty = today.getFullYear();
       const tm = String(today.getMonth() + 1).padStart(2, "0");
@@ -841,7 +854,13 @@ const AdminDashboard = () => {
               <input name="backupIframe" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط iframe خارجي (اتركه فارغًا كمبدّل احتياطي)" defaultValue={editingId ? (matches.find((m) => m.id === editingId)?.backupIframe ?? "") : ""} />
               <input name="commentator" className="rounded-md border bg-card p-2 text-sm" placeholder="المعلق" defaultValue={editingId ? ((metas[editingId]?.commentator ?? "")) : ""} />
               <input name="tvChannel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة الناقلة" defaultValue={editingId ? ((metas[editingId]?.tvChannel ?? "")) : ""} />
-              <input name="stadium" className="rounded-md border bg-card p-2 text-sm" placeholder="الملعب" defaultValue={editingId ? ((metas[editingId]?.stadium ?? "")) : ""} />
+              <input
+                name="stadium"
+                className="rounded-md border bg-card p-2 text-sm"
+                placeholder="الملعب"
+                value={formData.stadium}
+                onChange={(e) => handleInputChange("stadium", e.target.value)}
+              />
               <div className="col-span-full">
                 <select name="statusNew" className="w-full rounded-md border bg-card p-2 text-sm" defaultValue={editingId ? (statuses[editingId] ?? (matches.find((m) => m.id === editingId)?.status ?? "upcoming")) : "upcoming"}>
                   <option value="upcoming">Upcoming</option>

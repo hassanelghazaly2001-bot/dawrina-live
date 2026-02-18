@@ -292,12 +292,22 @@ export function TodaysMatchesSection() {
   useEffect(() => {}, []);
 
   const todayRaw = useMemo(
-    () => matches.filter((m) => (m.date ? m.date === todayISO : true)),
+    () =>
+      matches.filter((m) => {
+        const md = m.date ?? "";
+        const normalized = md === "today" ? todayISO : md === "tomorrow" ? tomorrowISO : md;
+        return normalized ? normalized === todayISO : true;
+      }),
     [matches, todayISO]
   );
   const tomorrowRaw = useMemo(
-    () => matches.filter((m) => m.date === tomorrowISO),
-    [matches, tomorrowISO]
+    () =>
+      matches.filter((m) => {
+        const md = m.date ?? "";
+        const normalized = md === "today" ? todayISO : md === "tomorrow" ? tomorrowISO : md;
+        return normalized === tomorrowISO;
+      }),
+    [matches, todayISO, tomorrowISO]
   );
   const adjustedToday = useMemo(() => todayRaw.map((m) => ({ ...m, status: deriveAutoStatus(m, 0) })), [todayRaw]);
   const adjustedTomorrow = useMemo(() => tomorrowRaw.map((m) => ({ ...m, status: deriveAutoStatus(m, 1) })), [tomorrowRaw]);
@@ -354,6 +364,11 @@ export function TodaysMatchesSection() {
   return (
     <section className="space-y-8" dir="rtl">
 
+      {(() => {
+        // eslint-disable-next-line no-console
+        console.log("Matches to render (public):", matches);
+        return null;
+      })()}
       
 
       {isLoading && (

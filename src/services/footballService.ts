@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 
 export async function fetchFixturesForLeagues(): Promise<Match[]> {
   try {
-    const { data, error } = await supabase.from("matches").select("*");
+    const { data, error } = await supabase.from("matches").select("*").eq("active", true);
     if (error || !Array.isArray(data)) return [];
     return data.map((row: { [k: string]: unknown }): Match => ({
       id: String(row.id),

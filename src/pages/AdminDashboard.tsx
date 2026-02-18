@@ -172,26 +172,39 @@ const AdminDashboard = () => {
     async function loadAds() {
       const { data, error } = await supabase
         .from("ads")
-        .select("id, title, image_url, link_url, type, placement, active");
+        .select("id, title, image_url, link_url, type, placement, position, is_active, ad_id, ad_script");
       if (!error && Array.isArray(data)) {
+        type SupabaseAdRow = {
+          id: number | string;
+          title?: string;
+          image_url?: string;
+          link_url?: string;
+          type?: "image" | "id" | "script";
+          placement?: "header" | "sidebar" | "inline";
+          position?: "header" | "sidebar" | "inline";
+          is_active?: boolean;
+          ad_id?: number;
+          ad_script?: string;
+        };
         setAds(
-          data.map((a: { id: number | string; title?: string; image_url?: string; link_url?: string; active?: boolean; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline" }) => ({
+          (data as SupabaseAdRow[]).map((a) => ({
             id: String(a.id),
             title: a.title,
             image_url: a.image_url,
             link_url: a.link_url,
-            active: !!a.active,
+            active: !!a.is_active,
             type: a.type ?? "image",
-            placement: a.placement ?? "header",
+            placement: (a.placement ?? a.position ?? "header") as "header" | "sidebar" | "inline",
+            ad_id: a.ad_id ?? undefined,
+            ad_script: a.ad_script ?? undefined,
           }))
         );
         const typesInit: Record<string, "image" | "id" | "script"> = {};
         const placementsInit: Record<string, "header" | "sidebar" | "inline"> = {};
-        const dataArr = data as Array<{ id: number | string; type?: "image" | "id" | "script"; placement?: "header" | "sidebar" | "inline" }>;
-        for (const a of dataArr) {
+        for (const a of data as SupabaseAdRow[]) {
           const idStr = String(a.id);
           typesInit[idStr] = a.type ?? "image";
-          placementsInit[idStr] = a.placement ?? "header";
+          placementsInit[idStr] = (a.placement ?? a.position ?? "header") as "header" | "sidebar" | "inline";
         }
         setAdTypeSelections(typesInit);
         setPlacementSelections(placementsInit);
@@ -357,6 +370,7 @@ const AdminDashboard = () => {
     const ad_id_raw = getVal("ad_ad_id");
     const ad_id = ad_id_raw ? Number.parseInt(ad_id_raw, 10) : undefined;
     const active = getChecked("ad_active");
+    const ad_script = getValArea("ad_script");
     if (!title || !type || !placement || (type === "image" && (!image_url || !link_url)) || (type === "id" && !ad_id_raw) || (type === "script" && !ad_script)) {
       alert("Please fill all fields");
       return;
@@ -365,17 +379,39 @@ const AdminDashboard = () => {
       title: title || null,
       type,
       placement,
+      position: placement,
       image_url: type === "image" ? (image_url || null) : null,
       link_url: type === "image" ? (link_url || null) : null,
-      active: !!active,
+      ad_id: type === "id" ? (ad_id ?? null) : null,
+      ad_script: type === "script" ? (ad_script || null) : null,
+      is_active: !!active,
     };
-    const { error } = await supabase.from("ads").insert([payload]);
+    const { data, error } = await supabase.from("ads").update(payload).eq("id", id).select("*").single();
     if (error) {
       alert(error.message || "تعذر حفظ الإعلان");
       setStatus(error.message || "تعذر حفظ الإعلان");
       return;
     }
-    console.log("SUPABASE_AD_SAVED", payload);
+    console.log("SUPABASE_AD_UPDATED", payload);
+    setAds((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? {
+              id,
+              title: (data as { title?: string }).title,
+              image_url: (data as { image_url?: string }).image_url,
+              link_url: (data as { link_url?: string }).link_url,
+              active: !!(data as { is_active?: boolean }).is_active,
+              type: (data as { type?: "image" | "id" | "script" }).type,
+              placement: ((data as { placement?: "header" | "sidebar" | "inline"; position?: "header" | "sidebar" | "inline" }).placement ??
+                (data as { placement?: "header" | "sidebar" | "inline"; position?: "header" | "sidebar" | "inline" }).position ??
+                "header") as "header" | "sidebar" | "inline",
+              ad_id: (data as { ad_id?: number }).ad_id ?? undefined,
+              ad_script: (data as { ad_script?: string }).ad_script ?? undefined,
+            }
+          : a
+      )
+    );
     setStatus("تم حفظ الإعلان");
   }
 
@@ -1153,9 +1189,12 @@ const AdminDashboard = () => {
                     title: title || null,
                     type,
                     placement,
+                    position: placement,
                     image_url: type === "image" ? (image_url || null) : null,
                     link_url: type === "image" ? (link_url || null) : null,
-                    active,
+                    ad_id: type === "id" ? (ad_id_raw ? Number.parseInt(ad_id_raw, 10) : null) : null,
+                    ad_script: type === "script" ? (script || null) : null,
+                    is_active: active,
                   };
                   const { data, error } = await supabase.from("ads").insert(payload).select("*").single();
                   if (!error && data) {
@@ -1164,9 +1203,11 @@ const AdminDashboard = () => {
                       title: data.title,
                       image_url: data.image_url,
                       link_url: data.link_url,
-                      active: !!data.active,
+                      active: !!data.is_active,
                       type: data.type,
-                      placement: data.placement,
+                      placement: (data.placement ?? data.position ?? "header") as "header" | "sidebar" | "inline",
+                      ad_id: data.ad_id ?? undefined,
+                      ad_script: data.ad_script ?? undefined,
                     }]);
                     setShowAdForm(false);
                     setStatus("تم حفظ الإعلان");

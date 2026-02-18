@@ -454,10 +454,9 @@ const AdminDashboard = () => {
         return;
       }
     }
-    const tvChannel = String(fd.get("tvChannel") ?? "").trim();
+    const channelText = String(fd.get("channel") ?? "").trim();
     const commentator = String(fd.get("commentator") ?? "").trim();
     const stadium = String(fd.get("stadium") ?? "").trim();
-    const channelText = String(fd.get("channel") ?? "").trim();
     const stream1 = String(fd.get("stream1") ?? "").trim();
     const stream2 = String(fd.get("stream2") ?? "").trim();
     const match: Match = {
@@ -507,7 +506,7 @@ const AdminDashboard = () => {
       if (insertedId) {
         setEntries((prev) => ({ ...prev, [insertedId]: [String(fd.get("stream1") ?? ""), String(fd.get("stream2") ?? ""), "", ""] }));
         setStatuses((prev) => ({ ...prev, [insertedId]: (String(fd.get("statusNew") ?? "upcoming") as "live" | "upcoming" | "finished") }));
-        setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel, commentator, stadium } }));
+        setMetas((prev) => ({ ...prev, [insertedId]: { tvChannel: channelText, commentator, stadium } }));
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "تعذر حفظ المباراة";
@@ -631,12 +630,12 @@ const AdminDashboard = () => {
       set("league", m.league ?? "");
       set("time", m.time ?? "");
       set("channelSlug", m.channelSlug ?? "");
+        set("channel", m.channel ?? "");
       set("backupIframe", m.backupIframe ?? "");
       set("playerServer", m.playerServer ?? "panda");
       setSelectedServer((m.playerServer as "panda" | "starz") ?? "panda");
       set("stream1", arr[0] ?? "");
       set("stream2", arr[1] ?? "");
-      set("tvChannel", meta.tvChannel ?? "");
       set("commentator", meta.commentator ?? "");
       set("stadium", meta.stadium ?? "");
         setFormData((prev) => ({ ...prev, stadium: meta.stadium ?? "" }));
@@ -865,8 +864,7 @@ const AdminDashboard = () => {
             </div>
               <input name="backupIframe" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط iframe خارجي (اتركه فارغًا كمبدّل احتياطي)" defaultValue={editingId ? (matches.find((m) => m.id === editingId)?.backupIframe ?? "") : ""} />
               <input name="commentator" className="rounded-md border bg-card p-2 text-sm" placeholder="المعلق" defaultValue={editingId ? ((metas[editingId]?.commentator ?? "")) : ""} />
-              <input name="channel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة (نص)" defaultValue={editingId ? ((matches.find((m) => m.id === editingId)?.channel ?? "")) : ""} />
-              <input name="tvChannel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة الناقلة" defaultValue={editingId ? ((metas[editingId]?.tvChannel ?? "")) : ""} />
+              <input name="channel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة الناقلة" defaultValue={editingId ? ((matches.find((m) => m.id === editingId)?.channel ?? "")) : ""} />
               <input
                 name="stadium"
                 className="rounded-md border bg-card p-2 text-sm"

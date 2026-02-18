@@ -4,6 +4,7 @@ import { t } from "@/lib/i18n";
 import type { Match } from "@/data/matches";
 import { Star } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+  import { BrandLogo } from "@/components/BrandLogo";
  
 
 const adTypesMap = { image: "Image Ad", id: "Ad Unit ID", script: "Custom Script" };
@@ -1354,7 +1355,8 @@ const AdminDashboard = () => {
                             <div className="space-y-2">
                               <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
                               {!a.image_url && (
-                                <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-card/40 p-2">
+                                <div className="flex items-center justify-center gap-2 rounded-md border border-dashed border-border bg-card/40 p-2">
+                                  <BrandLogo />
                                   <span className="text-[11px] text-muted-foreground">لا توجد صورة — سيتم عرض شعار دورينا افتراضيًا</span>
                                 </div>
                               )}

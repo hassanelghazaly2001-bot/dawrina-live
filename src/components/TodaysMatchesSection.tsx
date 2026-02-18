@@ -288,9 +288,11 @@ export function TodaysMatchesSection() {
     (async () => {
       const { data } = await supabase
         .from("ads")
-        .select("ad_id, title, image_url, redirect_url, type, position, is_active, ad_script, code_html")
+        .select("ad_id, title, image_url, redirect_url, type, position, is_active, code_html")
         .eq("is_active", true)
         .eq("position", "sidebar");
+      // eslint-disable-next-line no-console
+      console.log("Ads found in database:", data);
       if (Array.isArray(data)) {
         setAdsSidebar(
           data.map((raw: unknown) => {
@@ -302,7 +304,6 @@ export function TodaysMatchesSection() {
               redirect_url?: string;
               is_active?: boolean;
               position?: "header" | "sidebar" | "inline";
-              ad_script?: string;
               code_html?: string;
             };
             return {
@@ -312,7 +313,6 @@ export function TodaysMatchesSection() {
               image_url: a.image_url,
               link_url: a.redirect_url,
               ad_id: a.ad_id,
-              ad_script: a.ad_script,
               code_html: a.code_html,
               active: !!a.is_active,
             };
@@ -321,26 +321,6 @@ export function TodaysMatchesSection() {
       }
     })().catch(() => void 0);
   }, []);
-  useEffect(() => {
-    try {
-      adsSidebar.forEach((a) => {
-        if (a.type === "script" && (a.code_html || a.ad_script) && a.ad_id) {
-          // eslint-disable-next-line no-console
-          console.log("Ad found in DB, attempting to render:", a.ad_id);
-          const container = document.getElementById(`ad-${a.ad_id}`);
-          if (!container) return;
-          while (container.firstChild) {
-            container.removeChild(container.firstChild);
-          }
-          const html = String(a.code_html || a.ad_script);
-          const frag = document.createRange().createContextualFragment(html);
-          container.appendChild(frag);
-        }
-      });
-    } catch {
-      void 0;
-    }
-  }, [adsSidebar]);
 
   const todayRaw = useMemo(
     () =>
@@ -497,8 +477,8 @@ export function TodaysMatchesSection() {
                   )
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
-                ) : a.type === "script" && (a.code_html || a.ad_script) ? (
-                  <AdScript adId={a.ad_id} html={a.code_html || a.ad_script} />
+                ) : a.type === "script" && a.code_html ? (
+                  <AdScript adId={a.ad_id} html={a.code_html} />
                 ) : null}
               </div>
             ))}

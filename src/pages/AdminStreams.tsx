@@ -26,7 +26,7 @@ const AdminStreams = () => {
           league: String(row.league ?? ""),
           time: String(row.time ?? ""),
           status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-          liveUrl: (row.live_url as string | undefined) ?? "",
+          liveUrl: (row.stream_server_1 as string | undefined) ?? "",
         }))
       );
     })().catch(() => setMatches([]));
@@ -52,9 +52,9 @@ const AdminStreams = () => {
 
   async function save(id: string) {
     setStatus(null);
-    const live_url = (entries[id] ?? "").trim() || null;
+    const stream_server_1 = (entries[id] ?? "").trim() || null;
     const statusVal = statuses[id] ?? "upcoming";
-    const { error } = await supabase.from("matches").update({ live_url, status: statusVal }).eq("id", id);
+    const { error } = await supabase.from("matches").update({ stream_server_1, status: statusVal }).eq("id", id);
     if (error) {
       setStatus(error.message || "تعذر الحفظ");
       return;

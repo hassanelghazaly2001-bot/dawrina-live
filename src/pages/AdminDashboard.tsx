@@ -114,14 +114,14 @@ const AdminDashboard = () => {
           homeTeam: row.home_team ?? "",
           awayTeam: row.away_team ?? "",
           league: row.league ?? "",
-          leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+          leagueIcon: undefined,
           date: row.date ?? "",
           time: row.time ?? "",
           status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
           channelSlug: (row.channel as string | undefined) ?? undefined,
           homeLogo: (row.logo_home as string | undefined) ?? undefined,
           awayLogo: (row.logo_away as string | undefined) ?? undefined,
-          streamUrl: (row.live_url as string | undefined) ?? "",
+          streamUrl: (row.stream_server_1 as string | undefined) ?? "",
           commentator: (row.commentator as string | undefined) ?? undefined,
         }))
       );
@@ -130,7 +130,7 @@ const AdminDashboard = () => {
       const initialMetas: Record<string, { tvChannel: string; commentator: string; stadium: string }> = {};
       for (const row of data as Array<{ [k: string]: unknown }>) {
         const idStr = String(row.id);
-        initialEntries[idStr] = [String(row.live_url ?? "") || "", "", "", ""];
+        initialEntries[idStr] = [String((row as any).stream_server_1 ?? "") || "", "", "", ""];
         initialStatuses[idStr] = (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished");
         initialMetas[idStr] = {
           tvChannel: "",
@@ -274,19 +274,17 @@ const AdminDashboard = () => {
     const commentator = getVal("commentator");
     const stadium = getVal("stadium");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
-    const league_logo = getVal("leagueLogo");
     const cleanPayload = {
       home_team: homeTeam || null,
       away_team: awayTeam || null,
       logo_home: homeLogo || null,
       logo_away: awayLogo || null,
       league: league || null,
-      league_logo: league_logo || null,
       time: time || null,
       date: selectedDate,
       channel: (otherSlug || channelSlug) || null,
       commentator: commentator || null,
-      live_url: stream1 || null,
+      stream_server_1: stream1 || null,
       status: statusVal || "upcoming",
       active: true,
     };
@@ -303,14 +301,14 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
-            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+            leagueIcon: undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
             channelSlug: (row.channel as string | undefined) ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
-            streamUrl: (row.live_url as string | undefined) ?? "",
+            streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
           }))
         );
@@ -384,12 +382,11 @@ const AdminDashboard = () => {
       logo_home: match.homeLogo ?? null,
       logo_away: match.awayLogo ?? null,
       league: match.league || null,
-      league_logo: match.leagueIcon ?? null,
       time: timeStr || null,
       date: normalizedDate,
       channel: match.channelSlug ?? null,
       commentator: match.commentator ?? null,
-      live_url: match.streamUrl || null,
+      stream_server_1: match.streamUrl || null,
       status: match.status || "upcoming",
       active: true,
     };
@@ -470,14 +467,14 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
-            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+            leagueIcon: undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
             channelSlug: (row.channel as string | undefined) ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
-            streamUrl: (row.live_url as string | undefined) ?? "",
+            streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
           }))
         );
@@ -527,14 +524,14 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
-            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+            leagueIcon: undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
             channelSlug: (row.channel as string | undefined) ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
-            streamUrl: (row.live_url as string | undefined) ?? "",
+            streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
           }))
         );
@@ -566,14 +563,14 @@ const AdminDashboard = () => {
             homeTeam: row.home_team ?? "",
             awayTeam: row.away_team ?? "",
             league: row.league ?? "",
-            leagueIcon: (row.league_logo as string | undefined) ?? undefined,
+            leagueIcon: undefined,
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
             channelSlug: (row.channel as string | undefined) ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
-            streamUrl: (row.live_url as string | undefined) ?? "",
+            streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
             isTopMatch: Boolean(row.is_top_match ?? false),
           }))

@@ -130,7 +130,11 @@ const AdminDashboard = () => {
       const initialMetas: Record<string, { tvChannel: string; commentator: string; stadium: string }> = {};
       for (const row of data as Array<{ [k: string]: unknown }>) {
         const idStr = String(row.id);
-        initialEntries[idStr] = [String((row as any).stream_server_1 ?? "") || "", "", "", ""];
+        {
+          const s1Unknown = (row as { stream_server_1?: unknown }).stream_server_1;
+          const s1 = typeof s1Unknown === "string" ? s1Unknown : "";
+          initialEntries[idStr] = [s1 || "", "", "", ""];
+        }
         initialStatuses[idStr] = (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished");
         initialMetas[idStr] = {
           tvChannel: "",

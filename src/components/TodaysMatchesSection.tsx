@@ -295,14 +295,13 @@ export function TodaysMatchesSection() {
         setAdsSidebar(
           data.map((raw: unknown) => {
             const a = raw as {
-              id: number | string;
+              ad_id?: number | string;
               title?: string;
               type?: "image" | "script" | "id";
               image_url?: string;
               redirect_url?: string;
               is_active?: boolean;
               position?: "header" | "sidebar" | "inline";
-              ad_id?: number;
               ad_script?: string;
               code_html?: string;
             };

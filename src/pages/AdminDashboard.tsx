@@ -372,8 +372,20 @@ const AdminDashboard = () => {
     const adData = { title, type, placement, image_url, link_url, ad_id, active, ad_script };
     // eslint-disable-next-line no-console
     console.log("Button clicked! Ad data:", adData);
-    if (!title || !type || !placement || (type === "image" && (!image_url || !link_url)) || (type === "id" && !ad_id_raw) || (type === "script" && !ad_script)) {
-      alert("Please fill all fields");
+    if (!title || !placement) {
+      alert("يرجى إدخال العنوان والمكان");
+      return;
+    }
+    if (type === "image" && !image_url) {
+      alert("يرجى إدخال رابط الصورة");
+      return;
+    }
+    if (type === "id" && !ad_id_raw) {
+      alert("يرجى إدخال معرّف الإعلان");
+      return;
+    }
+    if (type === "script" && !ad_script) {
+      alert("يرجى إدخال كود الإعلان");
       return;
     }
     const payload = {

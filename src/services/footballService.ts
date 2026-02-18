@@ -17,6 +17,7 @@ export async function fetchFixturesForLeagues(): Promise<Match[]> {
       status: (String((row.status as string | undefined) ?? "upcoming").toLowerCase() as Match["status"]),
       streamUrl: (row.stream_server_1 as string | undefined) ? String(row.stream_server_1 as string) : "",
       channelSlug: (row.channel as string | undefined) ? String(row.channel as string) : undefined,
+      channel: (row.channel as string | undefined) ? String(row.channel as string) : undefined,
       backupIframe: undefined,
       playerServer: undefined,
       homeLogo: (row.logo_home as string | undefined) ? String(row.logo_home as string) : undefined,

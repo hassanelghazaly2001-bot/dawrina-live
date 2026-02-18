@@ -20,6 +20,8 @@ export interface Match {
   awayLogo?: string;
   /** Optional TV channel information for enriched UI */
   tvChannel?: string;
+  /** Channel source/slug from Supabase (e.g., 'bein-3' or name) */
+  channel?: string;
   /** Optional commentator name for enriched UI */
   commentator?: string;
   /** Optional stadium/venue name for enriched UI */

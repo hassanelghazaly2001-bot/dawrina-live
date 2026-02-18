@@ -237,6 +237,8 @@ export function TodaysMatchesSection() {
       try {
         // eslint-disable-next-line no-console
         console.log("Final ad object to render:", { adId, html });
+        // eslint-disable-next-line no-console
+        console.log("Current Ad HTML code:", html);
         const container = document.getElementById(`ad-${adId}`);
         if (!container) return;
         if (container.innerHTML !== "") return;
@@ -246,7 +248,7 @@ export function TodaysMatchesSection() {
         void 0;
       }
     }, [adId]);
-    return <div id={`ad-${adId}`} data-ad-id={adId} className="min-h-[250px]" />;
+    return <div id={`ad-${adId}`} data-ad-id={adId} className="min-h-[250px] min-w-[250px]" />;
   };
 
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
@@ -464,7 +466,7 @@ export function TodaysMatchesSection() {
               />
             )}
             {adsSidebar.map((a) => (
-              <div key={a.ad_id ?? a.id} className="rounded-xl border border-border bg-card/40 p-3 min-h-[250px]">
+              <div key={a.ad_id ?? a.id} className="rounded-xl border border-border bg-card/40 p-3 min-h-[250px] min-w-[250px]">
                 {a.type === "image" && a.image_url ? (
                   a.link_url ? (
                     <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">

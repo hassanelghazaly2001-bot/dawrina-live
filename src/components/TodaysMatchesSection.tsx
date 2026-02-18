@@ -302,8 +302,26 @@ export function TodaysMatchesSection() {
       }
     })().catch(() => void 0);
   }, []);
-
-  useEffect(() => {}, []);
+  useEffect(() => {
+    try {
+      adsSidebar.forEach((a) => {
+        if (a.type === "script" && (a.code_html || a.ad_script) && a.ad_id) {
+          // eslint-disable-next-line no-console
+          console.log("Ad found in DB, attempting to render:", a.ad_id);
+          const container = document.getElementById(`ad-${a.ad_id}`);
+          if (!container) return;
+          while (container.firstChild) {
+            container.removeChild(container.firstChild);
+          }
+          const html = String(a.code_html || a.ad_script);
+          const frag = document.createRange().createContextualFragment(html);
+          container.appendChild(frag);
+        }
+      });
+    } catch {
+      void 0;
+    }
+  }, [adsSidebar]);
 
   const todayRaw = useMemo(
     () =>
@@ -461,7 +479,7 @@ export function TodaysMatchesSection() {
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
                 ) : a.type === "script" && (a.code_html || a.ad_script) ? (
-                  <div dangerouslySetInnerHTML={{ __html: String(a.code_html || a.ad_script) }} />
+                  <div id={`ad-${a.ad_id}`} data-ad-id={a.ad_id} />
                 ) : null}
               </div>
             ))}

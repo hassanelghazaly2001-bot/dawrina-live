@@ -1351,7 +1351,14 @@ const AdminDashboard = () => {
                         </td>
                         <td className="p-2">
                           {(adTypeSelections[a.id] ?? a.type ?? "image") === "image" && (
-                            <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                            <div className="space-y-2">
+                              <input name="ad_image_url" data-id={a.id} defaultValue={a.image_url ?? ""} className="w-full rounded-md border bg-card p-2 text-sm" />
+                              {!a.image_url && (
+                                <div className="flex items-center justify-center rounded-md border border-dashed border-border bg-card/40 p-2">
+                                  <span className="text-[11px] text-muted-foreground">لا توجد صورة — سيتم عرض شعار دورينا افتراضيًا</span>
+                                </div>
+                              )}
+                            </div>
                           )}
                         </td>
                         <td className="p-2">

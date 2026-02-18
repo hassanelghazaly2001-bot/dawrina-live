@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n";
 import type { Match } from "@/data/matches";
 import { CalendarDays, AlertCircle, Loader2 } from "lucide-react";
 import { FeaturedMatchCard } from "@/components/FeaturedMatchCard";
+  import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/lib/supabase";
 
 function AdScriptRenderer({ html }: { html: string }) {
@@ -467,13 +468,19 @@ export function TodaysMatchesSection() {
             )}
             {adsSidebar.map((a) => (
               <div key={a.ad_id ?? a.id} className="rounded-xl border border-border bg-card/40 p-3 min-h-[250px] min-w-[250px]">
-                {a.type === "image" && a.image_url ? (
-                  a.link_url ? (
-                    <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">
+                {a.type === "image" ? (
+                  a.image_url ? (
+                    a.link_url ? (
+                      <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">
+                        <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
+                      </a>
+                    ) : (
                       <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
-                    </a>
+                    )
                   ) : (
-                    <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
+                    <div className="flex items-center justify-center">
+                      <BrandLogo />
+                    </div>
                   )
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>

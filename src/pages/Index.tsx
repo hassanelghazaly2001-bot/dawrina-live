@@ -1,4 +1,5 @@
 import { TodaysMatchesSection } from "@/components/TodaysMatchesSection";
+import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { fetchFixturesForLeagues } from "@/services/footballService";
@@ -99,7 +100,7 @@ const Index = () => {
         <div className="container py-5">
           <div className="flex flex-col items-start gap-2 text-left">
             <div className="flex items-center justify-start gap-3 w-full">
-            <img src="/logo.png" alt="شعار دورينا - Dawrina" className="h-10 w-auto rounded-md border border-border bg-card" />
+            <BrandLogo className="h-10" showText />
             <h1 className="flex flex-wrap items-baseline justify-start gap-2 text-2xl font-bold tracking-tight sm:text-3xl" dir="rtl">
               <span className="font-cairo text-[#FFD700] drop-shadow-[0_0_12px_rgba(255,215,0,0.5)]">
                 دورينا

@@ -91,17 +91,7 @@ const AdminDashboard = () => {
  
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem("admin-auth");
-      if (raw) {
-        const obj = JSON.parse(raw) as { valid: boolean; expiresAt: number };
-        if (obj.valid && obj.expiresAt > Date.now()) {
-          setAuthed(true);
-        }
-      }
-    } catch {
-      void 0;
-    }
+    setAuthed(false);
   }, []);
 
   useEffect(() => {
@@ -208,7 +198,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     function onScannerPaste(e: Event) {
       const detail = (e as CustomEvent<string>).detail as string | undefined;
-      const slug = detail ?? window.localStorage.getItem("scanner-last-slug") ?? "";
+      const slug = detail ?? "";
       if (!slug) return;
       if (!showNew) return;
       const f = formRef.current;
@@ -240,8 +230,6 @@ const AdminDashboard = () => {
     setErr(null);
     if (pwd === "260501") {
       setAuthed(true);
-      const expiresAt = Date.now() + 1000 * 60 * 60 * 12;
-      window.localStorage.setItem("admin-auth", JSON.stringify({ valid: true, expiresAt }));
       return;
     }
     setErr("Access Denied");

@@ -231,6 +231,26 @@ export function TodaysMatchesSection() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "script" | "id"; image_url?: string; link_url?: string; ad_script?: string; code_html?: string; ad_id?: number; active?: boolean }[]>([]);
 
+  const AdScript = ({ adId, html }: { adId?: number; html?: string }) => {
+    useEffect(() => {
+      if (!adId || !html) return;
+      try {
+        // eslint-disable-next-line no-console
+        console.log("Final ad object to render:", { adId, html });
+        const container = document.getElementById(`ad-${adId}`);
+        if (!container) return;
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+        const frag = document.createRange().createContextualFragment(String(html));
+        container.appendChild(frag);
+      } catch {
+        void 0;
+      }
+    }, [adId, html]);
+    return <div id={`ad-${adId}`} data-ad-id={adId} />;
+  };
+
   const dayOffset = useMemo(() => getOffsetForTab(activeTab), [activeTab]);
   const todayISO = useMemo(() => {
     const d = new Date();
@@ -479,7 +499,7 @@ export function TodaysMatchesSection() {
                 ) : a.type === "id" && a.ad_id ? (
                   <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
                 ) : a.type === "script" && (a.code_html || a.ad_script) ? (
-                  <div id={`ad-${a.ad_id}`} data-ad-id={a.ad_id} />
+                  <AdScript adId={a.ad_id} html={a.code_html || a.ad_script} />
                 ) : null}
               </div>
             ))}

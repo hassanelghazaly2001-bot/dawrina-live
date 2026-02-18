@@ -1309,15 +1309,19 @@ const AdminDashboard = () => {
                         <td className="p-2">
                           <select
                             className="rounded-md border bg-card p-2 text-sm"
-                            defaultValue={a.placement ?? a.position ?? "header"}
-                            onChange={(e) => setPlacementSelections((prev) => ({ ...prev, [a.id]: (e.target.value as "header" | "sidebar" | "inline") ?? "header" }))}
+                            defaultValue={a.position ?? "header"}
+                            onChange={(e) => {
+                              const val = (e.target.value || "header").toLowerCase();
+                              const normalized = val === "header" || val === "sidebar" || val === "inline" ? val : "header";
+                              setPlacementSelections((prev) => ({ ...prev, [String(a.ad_id ?? a.id)]: normalized as "header" | "sidebar" | "inline" }));
+                            }}
                           >
                             <option value="header">Header</option>
                             <option value="sidebar">Sidebar</option>
                             <option value="inline">Inline</option>
                           </select>
                           <div className="mt-1 text-[11px] text-muted-foreground">
-                            {placementMap[(placementSelections[a.id] ?? a.placement ?? "header") as "header" | "sidebar" | "inline"]}
+                            {placementMap[(placementSelections[String(a.ad_id ?? a.id)] ?? a.position ?? "header") as "header" | "sidebar" | "inline"]}
                           </div>
                         </td>
                         <td className="p-2">

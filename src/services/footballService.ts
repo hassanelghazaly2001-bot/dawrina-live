@@ -23,7 +23,7 @@ export async function fetchFixturesForLeagues(): Promise<Match[]> {
       awayLogo: (row.logo_away as string | undefined) ? String(row.logo_away as string) : undefined,
       tvChannel: undefined,
       commentator: (row.commentator as string | undefined) ? String(row.commentator as string) : undefined,
-      stadium: undefined,
+      stadium: (row.stadium as string | undefined) ? String(row.stadium as string) : undefined,
     }));
   } catch {
     return [];

@@ -6,7 +6,7 @@ import type { Match } from "@/data/matches";
 import { getTeamInitials } from "@/data/matches";
 import { t } from "@/lib/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, Bell, Flame, ThumbsUp, MapPin } from "lucide-react";
+import { Play, Bell, Tv, Mic, MapPin } from "lucide-react";
 
 interface MatchCardProps {
   match: Match;
@@ -252,24 +252,28 @@ export function MatchCard({ match }: MatchCardProps) {
             {/* Meta info row */}
             <div className="grid grid-cols-1 gap-2 text-muted-foreground sm:grid-cols-3">
               <div className="flex items-center gap-1.5">
-                <Flame className="h-3.5 w-3.5 text-amber-400" />
+                <Tv className="h-3.5 w-3.5 text-amber-400" />
                 <span className="font-semibold text-foreground/80">القناة:</span>
                 <span className="truncate">
-                  {match.tvChannel && match.tvChannel.trim().length > 0 ? match.tvChannel : "غير محدد"}
+                  {(match.tvChannel && match.tvChannel.trim().length > 0
+                    ? match.tvChannel
+                    : match.channelSlug && match.channelSlug.trim().length > 0
+                    ? match.channelSlug
+                    : "غير مدرج")}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <ThumbsUp className="h-3.5 w-3.5 text-emerald-400" />
+                <Mic className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="font-semibold text-foreground/80">المعلق:</span>
                 <span className="truncate">
-                  {match.commentator && match.commentator.trim().length > 0 ? match.commentator : "غير محدد"}
+                  {match.commentator && match.commentator.trim().length > 0 ? match.commentator : "سيعلن عنه"}
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5 text-sky-400" />
                 <span className="font-semibold text-foreground/80">الملعب:</span>
                 <span className="truncate">
-                  {match.stadium && match.stadium.trim().length > 0 ? match.stadium : "غير محدد"}
+                  {match.stadium && match.stadium.trim().length > 0 ? match.stadium : "غير مدرج"}
                 </span>
               </div>
             </div>

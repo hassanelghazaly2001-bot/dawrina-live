@@ -118,11 +118,13 @@ const AdminDashboard = () => {
           date: row.date ?? "",
           time: row.time ?? "",
           status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-          channelSlug: (row.channel as string | undefined) ?? undefined,
+          channelSlug: (row as { server_slug?: string }).server_slug ?? undefined,
           homeLogo: (row.logo_home as string | undefined) ?? undefined,
           awayLogo: (row.logo_away as string | undefined) ?? undefined,
           streamUrl: (row.stream_server_1 as string | undefined) ?? "",
           commentator: (row.commentator as string | undefined) ?? undefined,
+          channel: (row.channel as string | undefined) ?? undefined,
+          stadium: (row.stadium as string | undefined) ?? undefined,
         }))
       );
       const initialEntries: Record<string, string[]> = {};
@@ -277,6 +279,7 @@ const AdminDashboard = () => {
     const tvChannel = getVal("tvChannel");
     const commentator = getVal("commentator");
     const stadium = getVal("stadium");
+    const channelText = getVal("channel");
     const statusVal = getVal("status") as "live" | "upcoming" | "finished";
     const cleanPayload = {
       home_team: homeTeam || null,
@@ -286,7 +289,7 @@ const AdminDashboard = () => {
       league: league || null,
       time: time || null,
       date: selectedDate,
-      channel: (otherSlug || channelSlug) || null,
+      channel: channelText || null,
       commentator: commentator || null,
       stream_server_1: stream1 || null,
       stream_server_2: stream2 || null,
@@ -313,11 +316,13 @@ const AdminDashboard = () => {
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: (row.channel as string | undefined) ?? undefined,
+            channelSlug: (row as { server_slug?: string }).server_slug ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
             streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
+            channel: (row.channel as string | undefined) ?? undefined,
+            stadium: (row.stadium as string | undefined) ?? undefined,
           }))
         );
       }
@@ -392,7 +397,7 @@ const AdminDashboard = () => {
       league: match.league || null,
       time: timeStr || null,
       date: normalizedDate,
-      channel: match.channelSlug ?? null,
+      channel: match.channel ?? null,
       commentator: match.commentator ?? null,
       stream_server_1: match.streamUrl || null,
       stream_server_2: match.streamUrl2 ?? null,
@@ -452,6 +457,7 @@ const AdminDashboard = () => {
     const tvChannel = String(fd.get("tvChannel") ?? "").trim();
     const commentator = String(fd.get("commentator") ?? "").trim();
     const stadium = String(fd.get("stadium") ?? "").trim();
+    const channelText = String(fd.get("channel") ?? "").trim();
     const stream1 = String(fd.get("stream1") ?? "").trim();
     const stream2 = String(fd.get("stream2") ?? "").trim();
     const match: Match = {
@@ -466,6 +472,7 @@ const AdminDashboard = () => {
       streamUrl: stream1 || "",
       streamUrl2: stream2 || "",
       channelSlug,
+      channel: channelText || undefined,
       backupIframe,
       playerServer,
       homeLogo: (String(fd.get("homeLogo") ?? "").trim() || undefined),
@@ -487,11 +494,13 @@ const AdminDashboard = () => {
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: (row.channel as string | undefined) ?? undefined,
+            channelSlug: (row as { server_slug?: string }).server_slug ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
             streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
+            channel: (row.channel as string | undefined) ?? undefined,
+            stadium: (row.stadium as string | undefined) ?? undefined,
           }))
         );
       }
@@ -544,11 +553,13 @@ const AdminDashboard = () => {
             date: row.date ?? "",
             time: row.time ?? "",
             status: (String(row.status ?? "upcoming").toLowerCase() as "live" | "upcoming" | "finished"),
-            channelSlug: (row.channel as string | undefined) ?? undefined,
+            channelSlug: (row as { server_slug?: string }).server_slug ?? undefined,
             homeLogo: (row.logo_home as string | undefined) ?? undefined,
             awayLogo: (row.logo_away as string | undefined) ?? undefined,
             streamUrl: (row.stream_server_1 as string | undefined) ?? "",
             commentator: (row.commentator as string | undefined) ?? undefined,
+            channel: (row.channel as string | undefined) ?? undefined,
+            stadium: (row.stadium as string | undefined) ?? undefined,
           }))
         );
       }
@@ -854,6 +865,7 @@ const AdminDashboard = () => {
             </div>
               <input name="backupIframe" className="rounded-md border bg-card p-2 text-sm" placeholder="رابط iframe خارجي (اتركه فارغًا كمبدّل احتياطي)" defaultValue={editingId ? (matches.find((m) => m.id === editingId)?.backupIframe ?? "") : ""} />
               <input name="commentator" className="rounded-md border bg-card p-2 text-sm" placeholder="المعلق" defaultValue={editingId ? ((metas[editingId]?.commentator ?? "")) : ""} />
+              <input name="channel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة (نص)" defaultValue={editingId ? ((matches.find((m) => m.id === editingId)?.channel ?? "")) : ""} />
               <input name="tvChannel" className="rounded-md border bg-card p-2 text-sm" placeholder="القناة الناقلة" defaultValue={editingId ? ((metas[editingId]?.tvChannel ?? "")) : ""} />
               <input
                 name="stadium"

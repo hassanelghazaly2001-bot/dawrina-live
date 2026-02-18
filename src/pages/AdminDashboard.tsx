@@ -394,10 +394,6 @@ const AdminDashboard = () => {
       alert("يرجى إدخال العنوان والمكان");
       return;
     }
-    if (type === "image" && !image_url) {
-      alert("يرجى إدخال رابط الصورة");
-      return;
-    }
     if (type === "id" && !ad_id_raw) {
       alert("يرجى إدخال معرّف الإعلان");
       return;

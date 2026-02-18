@@ -654,6 +654,7 @@ const AdminDashboard = () => {
   }
 
   console.log("ADMIN_DASHBOARD_RENDER", { authed, matchesCount: matches.length, showNew });
+  console.log("Matches to render:", matches);
   if (!authed) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -970,13 +971,18 @@ const AdminDashboard = () => {
                 {(() => {
                   const targetISO =
                     quickDateFilter === "fixedToday"
-                      ? "2026-02-15"
+                      ? todayISO
                       : quickDateFilter === "fixedTomorrow"
-                      ? "2026-02-16"
+                      ? tomorrowISO
                       : adminTab === "today"
                       ? todayISO
                       : tomorrowISO;
-                  const dayFiltered = matches.filter((m) => (m.date ? m.date === targetISO : true));
+                  const dayFiltered = matches.filter((m) => {
+                    const md = m.date ?? "";
+                    const normalized =
+                      md === "today" ? todayISO : md === "tomorrow" ? tomorrowISO : md;
+                    return normalized ? normalized === targetISO : true;
+                  });
                   const getAdjustedDate = (m: Match) => {
                     if (!m.time || m.time === "–") return null;
                     const [hh, mm] = (m.time ?? "").split(":");
@@ -985,7 +991,8 @@ const AdminDashboard = () => {
                     if (Number.isNaN(h) || Number.isNaN(m2)) return null;
                     const d = new Date();
                     if (m.date) {
-                      const [y, mo, da] = m.date.split("-").map((x) => Number.parseInt(x, 10));
+                      const iso = m.date === "today" ? todayISO : m.date === "tomorrow" ? tomorrowISO : m.date;
+                      const [y, mo, da] = iso.split("-").map((x) => Number.parseInt(x, 10));
                       if (!Number.isNaN(y) && !Number.isNaN(mo) && !Number.isNaN(da)) {
                         d.setFullYear(y);
                         d.setMonth(mo - 1);

@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import type { Match } from "@/data/matches";
@@ -7,6 +7,7 @@ import { getTeamInitials } from "@/data/matches";
 import { t } from "@/lib/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Play, Bell, Tv, Mic, MapPin } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 interface MatchCardProps {
   match: Match;
@@ -91,11 +92,24 @@ export function MatchCard({ match }: MatchCardProps) {
   ) {
     event.preventDefault();
     event.stopPropagation();
+    const lsKey = `eng:${match.id}:reaction`;
+    const already = window.localStorage.getItem(lsKey);
+    if (already) {
+      setSelectedReaction(already as ReactionType);
+      return;
+    }
     setReactionCounts((prev) => ({
       ...prev,
       [reactionId]: prev[reactionId] + 1,
     }));
     setSelectedReaction(reactionId);
+    window.localStorage.setItem(lsKey, reactionId);
+    const payload = {
+      react_fire: reactionId === "fire" ? reactionCounts.fire + 1 : reactionCounts.fire,
+      react_clap: reactionId === "clap" ? reactionCounts.clap + 1 : reactionCounts.clap,
+      react_wow: reactionId === "wow" ? reactionCounts.wow + 1 : reactionCounts.wow,
+    };
+    void supabase.from("engagement").update(payload).eq("match_id", match.id);
   }
 
   function handleVoteClick(
@@ -104,11 +118,24 @@ export function MatchCard({ match }: MatchCardProps) {
   ) {
     event.preventDefault();
     event.stopPropagation();
+    const lsKey = `eng:${match.id}:vote`;
+    const already = window.localStorage.getItem(lsKey);
+    if (already) {
+      setSelectedVote(already as VoteOption);
+      return;
+    }
     setVoteCounts((prev) => ({
       ...prev,
       [option]: prev[option] + 1,
     }));
     setSelectedVote(option);
+    window.localStorage.setItem(lsKey, option);
+    const payload = {
+      votes_home: option === "home" ? voteCounts.home + 1 : voteCounts.home,
+      votes_draw: option === "draw" ? voteCounts.draw + 1 : voteCounts.draw,
+      votes_away: option === "away" ? voteCounts.away + 1 : voteCounts.away,
+    };
+    void supabase.from("engagement").update(payload).eq("match_id", match.id);
   }
 
   async function handleRemindMeClick(event: React.MouseEvent<HTMLButtonElement>) {
@@ -139,6 +166,84 @@ export function MatchCard({ match }: MatchCardProps) {
       }
     }
   }
+
+  useEffect(() => {
+    let timer: number | undefined;
+    (async () => {
+      const { data } = await supabase
+        .from("engagement")
+        .select("votes_home,votes_draw,votes_away,react_fire,react_clap,react_wow")
+        .eq("match_id", match.id)
+        .single();
+      if (data) {
+        setVoteCounts({
+          home: (data as { votes_home?: number }).votes_home ?? 0,
+          draw: (data as { votes_draw?: number }).votes_draw ?? 0,
+          away: (data as { votes_away?: number }).votes_away ?? 0,
+        });
+        setReactionCounts({
+          fire: (data as { react_fire?: number }).react_fire ?? 0,
+          clap: (data as { react_clap?: number }).react_clap ?? 0,
+          wow: (data as { react_wow?: number }).react_wow ?? 0,
+        });
+      } else {
+        const baseVotes = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
+        const wHome = 0.35 + Math.random() * 0.2;
+        const wAway = 0.35 + Math.random() * 0.2;
+        const wDraw = 1 - wHome - wAway;
+        const vHome = Math.max(0, Math.round(baseVotes * wHome));
+        const vAway = Math.max(0, Math.round(baseVotes * wAway));
+        const vDraw = Math.max(0, baseVotes - vHome - vAway);
+        const rFire = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
+        const rClap = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
+        const rWow = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
+        setVoteCounts({ home: vHome, draw: vDraw, away: vAway });
+        setReactionCounts({ fire: rFire, clap: rClap, wow: rWow });
+        await supabase
+          .from("engagement")
+          .upsert({
+            match_id: match.id,
+            votes_home: vHome,
+            votes_draw: vDraw,
+            votes_away: vAway,
+            react_fire: rFire,
+            react_clap: rClap,
+            react_wow: rWow,
+          })
+          .eq("match_id", match.id);
+      }
+      const lsVote = window.localStorage.getItem(`eng:${match.id}:vote`);
+      const lsReaction = window.localStorage.getItem(`eng:${match.id}:reaction`);
+      if (lsVote) setSelectedVote(lsVote as VoteOption);
+      if (lsReaction) setSelectedReaction(lsReaction as ReactionType);
+      const delay = 30000 + Math.floor(Math.random() * 30000);
+      timer = window.setInterval(() => {
+        const incVotes = Math.floor(Math.random() * 3) + 1;
+        const incReact = Math.floor(Math.random() * 3) + 1;
+        const pickVote = ["home", "draw", "away"][Math.floor(Math.random() * 3)] as VoteOption;
+        const pickReact = ["fire", "clap", "wow"][Math.floor(Math.random() * 3)] as ReactionType;
+        setVoteCounts((prev) => {
+          const next = { ...prev, [pickVote]: prev[pickVote] + incVotes };
+          void supabase
+            .from("engagement")
+            .update({ votes_home: next.home, votes_draw: next.draw, votes_away: next.away })
+            .eq("match_id", match.id);
+          return next;
+        });
+        setReactionCounts((prev) => {
+          const next = { ...prev, [pickReact]: prev[pickReact] + incReact };
+          void supabase
+            .from("engagement")
+            .update({ react_fire: next.fire, react_clap: next.clap, react_wow: next.wow })
+            .eq("match_id", match.id);
+          return next;
+        });
+      }, delay);
+    })().catch(() => void 0);
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
+  }, [match.id]);
 
   return (
     <motion.div
@@ -326,7 +431,7 @@ export function MatchCard({ match }: MatchCardProps) {
                     <div
                       className={[
                         "absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-[width]",
-                        "duration-300",
+                        "duration-500 ease-out",
                       ].join(" ")}
                       style={{ width: `${votePercentages.home}%` }}
                     />
@@ -351,7 +456,7 @@ export function MatchCard({ match }: MatchCardProps) {
                   </span>
                   <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-sky-500 transition-[width] duration-300"
+                      className="absolute inset-y-0 left-0 rounded-full bg-sky-500 transition-[width] duration-500 ease-out"
                       style={{ width: `${votePercentages.draw}%` }}
                     />
                   </div>
@@ -375,7 +480,7 @@ export function MatchCard({ match }: MatchCardProps) {
                   </span>
                   <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-amber-500 transition-[width] duration-300"
+                      className="absolute inset-y-0 left-0 rounded-full bg-amber-500 transition-[width] duration-500 ease-out"
                       style={{ width: `${votePercentages.away}%` }}
                     />
                   </div>

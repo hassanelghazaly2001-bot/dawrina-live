@@ -1,5 +1,6 @@
 import { TodaysMatchesSection } from "@/components/TodaysMatchesSection";
 import { BrandLogo } from "@/components/BrandLogo";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { fetchFixturesForLeagues } from "@/services/footballService";
@@ -97,7 +98,7 @@ const Index = () => {
         <div key={a.id} className="border-b border-border bg-card/40 py-2">{renderAd(a)}</div>
       ))}
       {/* Header */}
-      <header className="border border-amber-400/40 bg-black/40 shadow-xl shadow-black/40 backdrop-blur-md">
+      <header className="relative border border-amber-400/40 bg-black/40 shadow-xl shadow-black/40 backdrop-blur-md">
         <div className="container py-5">
           <div className="flex flex-col items-start gap-2 text-left">
             <div className="flex items-center justify-start gap-3 w-full">
@@ -108,6 +109,7 @@ const Index = () => {
             </p>
           </div>
         </div>
+        <InstallAppButton />
       </header>
 
       {/* Main */}

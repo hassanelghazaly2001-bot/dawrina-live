@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { fetchFixturesForLeagues } from "@/services/footballService";
 import type { Match } from "@/data/matches";
 import VideoPlayer from "@/components/VideoPlayer";
+import { Bell } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
 
 const MatchPage = () => {
@@ -66,6 +68,37 @@ const MatchPage = () => {
     }
   }
 
+  async function enableNotifications() {
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") return;
+      const reg = await navigator.serviceWorker.ready;
+      const vapidPublicKey = import.meta.env?.VITE_VAPID_PUBLIC_KEY || "";
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidPublicKey ? urlBase64ToUint8Array(vapidPublicKey) : undefined,
+      });
+      const body = {
+        endpoint: sub.endpoint,
+        keys: (sub.toJSON() as { keys?: { p256dh?: string; auth?: string } }).keys,
+      };
+      await supabase.from("push_subscriptions").upsert({ endpoint: body.endpoint, p256dh: body.keys?.p256dh, auth: body.keys?.auth });
+    } catch {
+      // ignore
+    }
+  }
+
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
@@ -73,6 +106,15 @@ const MatchPage = () => {
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">الرجوع</Link>
           <div className="h-4 w-px bg-border" />
           <span className="text-sm text-muted-foreground">{match?.league ?? "المباراة"}</span>
+          <button
+            type="button"
+            onClick={enableNotifications}
+            className="ml-auto inline-flex items-center gap-1 rounded-full border border-emerald-400 bg-black/40 px-2.5 py-1 text-[11px] font-bold text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.6)] hover:bg-black/60"
+            title="Enable Notifications"
+          >
+            <Bell className="h-3.5 w-3.5" />
+            التفعيل
+          </button>
         </div>
       </header>
       <main className="container py-6 flex-1">

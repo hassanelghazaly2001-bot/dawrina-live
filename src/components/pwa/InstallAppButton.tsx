@@ -1,4 +1,12 @@
-import { useEffect, useState } from "react";
+impo"In the Admin Dashboard and the Player Logic, we need to add a new channel to the Panda Server list:
+
+Add New Channel: Add 'ON Sport 1' to the channel selection menu.
+
+
+
+Keep Existing Logic: Ensure this doesn't break the automatic links for beIN channels already on the Panda server.
+
+Update Metadata: Make sure that when this channel is selected, the 'Channel' info in the Golden Row automatically displays 'ON Sport 1'."rt { useEffect, useState } from "react";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;

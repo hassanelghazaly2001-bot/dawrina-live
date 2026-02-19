@@ -4,7 +4,23 @@ const SERVERS = [
   { id: "1", label: "البث 1", vip: true, src: "https://stream.mmsiptv.com/droid/rtnc/playlist.m3u8" },
   { id: "2", label: "البث 2", vip: false, src: "https://live-hls-web-aje.akamaized.net/hls/live/2036571/aje/index.m3u8" },
   { id: "3", label: "البث 3", vip: false, src: "https://live-hls-web-aje.akamaized.net/hls/live/2036571/aje/index.m3u8" },
-  { id: "4", label: "البث 4", vip: false, src: "https://live-hls-web-aje.akamaized.net/hls/live/2036571/aje/index.m3u8" },
+// هاد الكود هو اللي كيزيد القناة لقائمة Panda اللي عندك
+const PANDA_CHANNELS = {
+  // القنوات اللي ديجا عندك
+  "bein-1": "https://p4.pandalive.live/albaplayer/bein1", 
+  "bein-2": "https://p4.pandalive.live/albaplayer/bein2",
+  
+  // زيد هاد السطر دابا:
+  "on-sport-1": "https://p4.pandalive.live/albaplayer/on-time/",
+  
+  // إيلا بغيتي تزيد حتى ON Sport 2 (غالباً كيكون نفس الـ pattern)
+  "on-sport-2": "https://p4.pandalive.live/albaplayer/on-time-2/" 
+};
+
+// هاد الدالة هي اللي كتجبد الرابط ملي كتختار السمية من الـ Admin
+export const getPandaStreamUrl = (channelKey) => {
+  return PANDA_CHANNELS[channelKey] || null;
+ { id: "4", label: "البث 4", vip: false, src: "https://live-hls-web-aje.akamaized.net/hls/live/2036571/aje/index.m3u8" },
 ] as const;
 
 interface ServerSelectorProps {

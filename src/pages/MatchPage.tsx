@@ -257,35 +257,7 @@ const MatchPage = () => {
       </header>
       <main className="container py-6 flex-1">
         <div className="mx-auto max-w-3xl">
-      {match && (
-        <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-card/50 px-3 py-2 text-[0.8rem]">
-          <div className="flex items-center gap-2">
-            {match.homeLogo && (
-              <img src={match.homeLogo} alt={match.homeTeam} className="h-6 w-6 rounded-md border border-border object-cover" />
-            )}
-            <span className="font-semibold text-foreground">{match.homeTeam}</span>
-            <span className="mx-2 text-xs text-muted-foreground">VS</span>
-            <span className="font-semibold text-foreground">{match.awayTeam}</span>
-            {match.awayLogo && (
-              <img src={match.awayLogo} alt={match.awayTeam} className="h-6 w-6 rounded-md border border-border object-cover" />
-            )}
-          </div>
-          <div className="flex items-center gap-3 text-[0.75rem] text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <span aria-hidden>🎙️</span>
-              <span>{match.commentator && match.commentator.trim().length > 0 ? match.commentator : "—"}</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span aria-hidden>📺</span>
-              <span>{match.channel && match.channel.trim().length > 0 ? match.channel : "—"}</span>
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span aria-hidden>🏟️</span>
-              <span>{match.stadium && match.stadium.trim().length > 0 ? match.stadium : "—"}</span>
-            </span>
-          </div>
-        </div>
-      )}
+      
           {iframeSrc ? (
             <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black/60 shadow-xl backdrop-blur-md">
               <div className="pointer-events-none absolute right-2 top-2 z-[9999] rounded-md bg-black/70 px-3 py-1 text-xs font-bold text-white">
@@ -308,6 +280,29 @@ const MatchPage = () => {
             </div>
           ) : (
             <VideoPlayer streamUrls={match?.streamUrl ? [match.streamUrl] : []} initialIndex={0} />
+          )}
+          {match && (
+            <div className="mt-3 mb-1 flex items-center text-[0.75rem]">
+              <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden>🏟️</span>
+                  <span>الملعب:</span>
+                  <span className="text-foreground">{match.stadium && match.stadium.trim().length > 0 ? match.stadium : "—"}</span>
+                </span>
+                <span className="mx-1">|</span>
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden>🎙️</span>
+                  <span>المعلق:</span>
+                  <span className="text-foreground">{match.commentator && match.commentator.trim().length > 0 ? match.commentator : "—"}</span>
+                </span>
+                <span className="mx-1">|</span>
+                <span className="inline-flex items-center gap-1">
+                  <span aria-hidden>📺</span>
+                  <span>القناة:</span>
+                  <span className="text-foreground">{match.channel && match.channel.trim().length > 0 ? match.channel : "—"}</span>
+                </span>
+              </div>
+            </div>
           )}
           <div className="mt-4 flex items-center gap-2">
             <button

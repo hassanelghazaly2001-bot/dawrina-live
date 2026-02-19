@@ -4,10 +4,11 @@ import { fetchFixturesForLeagues } from "@/services/footballService";
 import { MatchCard } from "@/components/MatchCard";
 import { t } from "@/lib/i18n";
 import type { Match } from "@/data/matches";
-import { CalendarDays, AlertCircle, Loader2 } from "lucide-react";
+import { CalendarDays, AlertCircle, Loader2, Menu } from "lucide-react";
 import { FeaturedMatchCard } from "@/components/FeaturedMatchCard";
   import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/lib/supabase";
+import { Link } from "react-router-dom";
 
 function AdScriptRenderer({ html }: { html: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -231,6 +232,7 @@ export function TodaysMatchesSection() {
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [adsSidebar, setAdsSidebar] = useState<{ id: string; title?: string; type?: "image" | "script" | "id"; image_url?: string; link_url?: string; ad_script?: string; code_html?: string; ad_id?: number; active?: boolean }[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const AdScript = ({ adId, html }: { adId?: number; html?: string }) => {
     useEffect(() => {
@@ -506,102 +508,64 @@ export function TodaysMatchesSection() {
       )}
 
       {!isLoading && !isError && matches.length > 0 && (
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Sidebar: Big match + standings (left on desktop, top on mobile) */}
-          <aside className="w-full shrink-0 space-y-4 lg:w-80">
-            {bigMatch && (
-              <FeaturedMatchCard
-                homeTeam={bigMatch.homeTeam}
-                awayTeam={bigMatch.awayTeam}
-                homeLogo={bigMatch.homeLogo}
-                awayLogo={bigMatch.awayLogo}
-                league={bigMatch.league}
-                matchId={bigMatch.id}
-                countdownTarget={bigMatchDate}
-                watchHref={`/match/${bigMatch.id}`}
-              />
-            )}
-            {adsSidebar.map((a) => (
-              <div key={a.ad_id ?? a.id} className="rounded-xl border border-border bg-card/40 p-3 min-h-[250px] min-w-[250px]">
-                {a.type === "image" ? (
-                  a.image_url ? (
-                    a.link_url ? (
-                      <a href={a.link_url} target="_blank" rel="noopener noreferrer" className="block">
-                        <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
-                      </a>
-                    ) : (
-                      <img src={a.image_url} alt={a.title ?? "Ad"} className="mx-auto max-h-40" />
-                    )
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <BrandLogo />
-                    </div>
-                  )
-                ) : a.type === "id" && a.ad_id ? (
-                  <div data-ad-id={a.ad_id} className="mx-auto text-xs text-muted-foreground">Ad #{a.ad_id}</div>
-                ) : a.type === "script" && a.code_html ? (
-                  <AdScript adId={a.ad_id} html={a.code_html} />
-                ) : null}
-              </div>
-            ))}
-          </aside>
-
-          {/* Main center column: vertical matches list */}
-          <div className="flex-1">
-            {/* Navigation bar with emoji and day tabs */}
-            <div className="mb-4 flex items-center justify-between rounded-2xl border border-amber-400/40 bg-black/40 px-3 py-2 shadow-xl shadow-black/40 backdrop-blur-md sm:px-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <span className="text-2xl sm:text-3xl drop-shadow-[0_0_10px_rgba(34,197,94,0.45)]" aria-hidden>
-                  ⚽
-                </span>
-              </div>
-              <div className="inline-flex items-center justify-center rounded-full border border-amber-400/40 bg-black/30 p-0.5 text-xs sm:text-sm">
-                {DATE_TABS.map((tab) => {
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setActiveTab(tab.id)}
-                      className={[
-                        "relative mx-0.5 flex items-center justify-center rounded-full px-2.5 py-1.5 font-medium transition-all sm:px-3",
-                        isActive
-                          ? "bg-amber-500 text-amber-950 shadow-[0_0_12px_rgba(245,158,11,0.35)]"
-                          : "text-muted-foreground hover:bg-amber-500/10",
-                      ].join(" ")}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Dynamic title above matches list */}
-            <h2 className="mb-3 bg-gradient-to-l from-amber-400 via-amber-200 to-amber-100 bg-clip-text text-xl font-extrabold tracking-tight text-transparent sm:text-2xl">
-              {sectionTitle}
-            </h2>
-            <p className="mb-6 bg-gradient-to-l from-amber-400 via-amber-200 to-amber-100 bg-clip-text text-2xl font-extrabold tracking-tight text-transparent sm:text-3xl">
-              {formatDateLabel(dayOffset)}
-            </p>
-
-            <motion.div
-              id="match-container"
-              className="flex flex-col gap-4"
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {(listForTab ?? []).map((match) => (
-                <MatchCard key={match.id} match={match} />
-              ))}
-              {(listForTab ?? []).length === 0 && (
-                <div className="rounded-xl border border-border bg-card/60 p-6 text-center text-sm text-muted-foreground">
-                  لا توجد مباريات لهذا الدوري في هذا اليوم. جرّب دوريًا أو تاريخًا آخر.
-                </div>
-              )}
-            </motion.div>
+        <div className="relative">
+          <div className="flex items-center justify-center mb-6">
+            <BrandLogo className="h-12 sm:h-16" showText />
           </div>
+          {bigMatch && (
+            <FeaturedMatchCard
+              homeTeam={bigMatch.homeTeam}
+              awayTeam={bigMatch.awayTeam}
+              homeLogo={bigMatch.homeLogo}
+              awayLogo={bigMatch.awayLogo}
+              league={bigMatch.league}
+              matchId={bigMatch.id}
+              countdownTarget={bigMatchDate}
+              watchHref={`/match/${bigMatch.id}`}
+            />
+          )}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(true)}
+            className="fixed right-3 top-3 inline-flex items-center justify-center rounded-full border border-amber-400/40 bg-black/50 p-2 text-amber-300 shadow-xl backdrop-blur-md sm:right-4 sm:top-4"
+            aria-label="Menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          {drawerOpen && (
+            <>
+              <div
+                className="fixed inset-0 bg-black/40 backdrop-blur-[2px]"
+                onClick={() => setDrawerOpen(false)}
+              />
+              <div className="fixed right-0 top-0 z-50 h-screen w-72 sm:w-80 overflow-y-auto border-l border-amber-400/30 bg-black/40 shadow-2xl backdrop-blur-xl">
+                <div className="flex items-center justify-between p-3">
+                  <span className="text-xs font-semibold text-amber-200">قائمة المباريات</span>
+                  <button
+                    type="button"
+                    className="rounded-md border border-amber-400/40 bg-black/40 px-2 py-1 text-[11px] text-amber-200"
+                    onClick={() => setDrawerOpen(false)}
+                  >
+                    إغلاق
+                  </button>
+                </div>
+                <div className="px-2 pb-3">
+                  {(listForTab ?? []).slice(0, 12).map((m, i) => (
+                    <Link
+                      key={m.id}
+                      to={`/match/${m.id}`}
+                      className="mb-2 flex items-center justify-between rounded-lg border border-border bg-card/40 px-2 py-2 text-sm hover:bg-card/60"
+                    >
+                      <span className="font-semibold text-foreground">{m.homeTeam}</span>
+                      <span className="mx-1 text-muted-foreground">vs</span>
+                      <span className="font-semibold text-foreground">{m.awayTeam}</span>
+                      <span className="ms-auto text-[11px] text-muted-foreground">{m.time}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
     </section>

@@ -114,13 +114,8 @@ const Index = () => {
       {/* Header */}
       <header className="relative border border-amber-400/40 bg-black/40 shadow-xl shadow-black/40 backdrop-blur-md">
         <div className="container py-5">
-          <div className="flex flex-col items-start gap-2 text-left">
-            <div className="flex items-center justify-start gap-3 w-full">
-            <BrandLogo className="h-10" showText />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground" dir="rtl">
-              الكرة العربية والعالمية
-            </p>
+          <div className="flex items-center justify-center">
+            <BrandLogo className="h-12 sm:h-16" showText />
           </div>
         </div>
         <InstallAppButton />

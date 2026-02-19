@@ -232,6 +232,17 @@ const AdminDashboard = () => {
         void 0;
       }
     }
+    const allScripts = Array.from(document.querySelectorAll("script"));
+    for (const s of allScripts) {
+      const src = (s.getAttribute("src") || "").toLowerCase();
+      if (src.includes("share-modal")) {
+        try {
+          s.remove();
+        } catch {
+          void 0;
+        }
+      }
+    }
   }, []);
   useEffect(() => {
     async function loadAds() {

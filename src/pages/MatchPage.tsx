@@ -128,6 +128,14 @@ const MatchPage = () => {
       finished: "EventCompleted",
     };
     const startDateISO = buildStartISO(match);
+    const originHost = (() => {
+      try {
+        return window.location.origin.startsWith("http") ? window.location.origin : `https://${window.location.host}`;
+      } catch {
+        return "https://dourina.com";
+      }
+    })();
+    const imageUrl = `${originHost}/logo.png`;
     const ld = {
       "@context": "https://schema.org",
       "@type": "SportsEvent",
@@ -137,11 +145,19 @@ const MatchPage = () => {
       location: match.stadium
         ? { "@type": "Place", name: match.stadium }
         : undefined,
+      image: imageUrl,
       competitor: [
         { "@type": "SportsTeam", name: home || "Home Team" },
         { "@type": "SportsTeam", name: away || "Away Team" },
       ],
       url: urlHere,
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD",
+        availability: "https://schema.org/InStock",
+        url: urlHere,
+      },
     };
     let script = document.getElementById("seo-sportsevent") as HTMLScriptElement | null;
     if (!script) {

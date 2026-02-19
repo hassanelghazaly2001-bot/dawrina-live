@@ -6,35 +6,15 @@ import type { Match } from "@/data/matches";
 import { getTeamInitials } from "@/data/matches";
 import { t } from "@/lib/i18n";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Play, Bell, Tv, Mic, MapPin } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Bell } from "lucide-react";
 
 interface MatchCardProps {
   match: Match;
 }
 
-type ReactionType = "fire" | "clap" | "wow";
-type VoteOption = "home" | "draw" | "away";
-
-const REACTION_CONFIG: { id: ReactionType; label: string; emoji: string }[] = [
-  { id: "fire", label: "حماس", emoji: "🔥" },
-  { id: "clap", label: "تصفيق", emoji: "👏" },
-  { id: "wow", label: "مفاجأة", emoji: "😮" },
-];
+// Minimal card: reactions and voting removed
 
 export function MatchCard({ match }: MatchCardProps) {
-  const { channel, stadium, commentator } = match;
-  function formatCount(n: number): string {
-    if (n >= 1_000_000) {
-      const v = Math.round((n / 1_000_000) * 10) / 10;
-      return `${v}M`;
-    }
-    if (n >= 1_000) {
-      const v = Math.round((n / 1_000) * 10) / 10;
-      return `${v}k`;
-    }
-    return String(n);
-  }
   function adjustedTimeStr(raw: string): string {
     const parts = raw?.split(":") ?? [];
     const h = Number.parseInt(parts[0] ?? "", 10);
@@ -59,35 +39,9 @@ export function MatchCard({ match }: MatchCardProps) {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null);
-  const [selectedVote, setSelectedVote] = useState<VoteOption | null>(null);
-
-  const [reactionCounts, setReactionCounts] = useState<Record<ReactionType, number>>({
-    fire: 0,
-    clap: 0,
-    wow: 0,
-  });
-
-  const [voteCounts, setVoteCounts] = useState<Record<VoteOption, number>>({
-    home: 0,
-    draw: 0,
-    away: 0,
-  });
-
   const clickAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const totalVotes = voteCounts.home + voteCounts.draw + voteCounts.away;
-
-  const votePercentages = useMemo(() => {
-    if (!totalVotes) {
-      return { home: 0, draw: 0, away: 0 };
-    }
-    return {
-      home: Math.round((voteCounts.home / totalVotes) * 100),
-      draw: Math.round((voteCounts.draw / totalVotes) * 100),
-      away: Math.round((voteCounts.away / totalVotes) * 100),
-    };
-  }, [voteCounts, totalVotes]);
+  // engagement removed
 
   function handleCardClick() {
     if (clickAudioRef.current) {
@@ -97,57 +51,9 @@ export function MatchCard({ match }: MatchCardProps) {
     setIsExpanded((prev) => !prev);
   }
 
-  function handleReactionClick(
-    event: React.MouseEvent<HTMLButtonElement>,
-    reactionId: ReactionType
-  ) {
-    event.preventDefault();
-    event.stopPropagation();
-    const lsKey = `eng:${match.id}:reaction`;
-    const already = window.localStorage.getItem(lsKey);
-    if (already) {
-      setSelectedReaction(already as ReactionType);
-      return;
-    }
-    setReactionCounts((prev) => ({
-      ...prev,
-      [reactionId]: prev[reactionId] + 1,
-    }));
-    setSelectedReaction(reactionId);
-    window.localStorage.setItem(lsKey, reactionId);
-    const payload = {
-      react_fire: reactionId === "fire" ? reactionCounts.fire + 1 : reactionCounts.fire,
-      react_clap: reactionId === "clap" ? reactionCounts.clap + 1 : reactionCounts.clap,
-      react_wow: reactionId === "wow" ? reactionCounts.wow + 1 : reactionCounts.wow,
-    };
-    void supabase.from("engagement").update(payload).eq("match_id", match.id);
-  }
+  // removed
 
-  function handleVoteClick(
-    event: React.MouseEvent<HTMLButtonElement>,
-    option: VoteOption
-  ) {
-    event.preventDefault();
-    event.stopPropagation();
-    const lsKey = `eng:${match.id}:vote`;
-    const already = window.localStorage.getItem(lsKey);
-    if (already) {
-      setSelectedVote(already as VoteOption);
-      return;
-    }
-    setVoteCounts((prev) => ({
-      ...prev,
-      [option]: prev[option] + 1,
-    }));
-    setSelectedVote(option);
-    window.localStorage.setItem(lsKey, option);
-    const payload = {
-      votes_home: option === "home" ? voteCounts.home + 1 : voteCounts.home,
-      votes_draw: option === "draw" ? voteCounts.draw + 1 : voteCounts.draw,
-      votes_away: option === "away" ? voteCounts.away + 1 : voteCounts.away,
-    };
-    void supabase.from("engagement").update(payload).eq("match_id", match.id);
-  }
+  // removed
 
   async function handleRemindMeClick(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
@@ -364,168 +270,7 @@ export function MatchCard({ match }: MatchCardProps) {
           </div>
         )}
 
-        {/* Expanded details: commentator, stadium, interactions */}
-        {isExpanded && (
-          <motion.div
-            layout
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-3 space-y-3 border-t border-white/10 pt-3 text-[0.7rem]"
-          >
-            {/* Meta info row */}
-            <div className="grid grid-cols-1 gap-2 text-muted-foreground sm:grid-cols-3">
-              <div className="flex items-center gap-1.5">
-                <Tv className="h-3.5 w-3.5 text-amber-400" />
-                <span className="font-semibold text-foreground/80">القناة:</span>
-                <span className="truncate">
-                  {channel && channel.trim().length > 0 ? channel : "غير مدرج"}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Mic className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="font-semibold text-foreground/80">المعلق:</span>
-                <span className="truncate">
-                  {commentator && commentator.trim().length > 0 ? commentator : "سيعلن عنه"}
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-sky-400" />
-                <span className="font-semibold text-foreground/80">الملعب:</span>
-                <span className="truncate">
-                  {stadium && stadium.trim().length > 0 ? stadium : "غير مدرج"}
-                </span>
-              </div>
-            </div>
-
-            {/* Emoji reactions */}
-            <div className="flex items-center justify-between gap-2 text-[0.7rem]">
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <span className="text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground/80">
-                  التفاعل
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                {REACTION_CONFIG.map((reaction) => (
-                  <button
-                    key={reaction.id}
-                    type="button"
-                    onClick={(event) => handleReactionClick(event, reaction.id)}
-                    className={[
-                      "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[0.65rem] font-medium transition",
-                      selectedReaction === reaction.id
-                        ? "border-emerald-400 bg-emerald-500/10 text-emerald-100"
-                        : "border-border bg-card/40 text-muted-foreground hover:border-emerald-500/60 hover:text-emerald-100",
-                    ].join(" ")}
-                  >
-                    <span>{reaction.emoji}</span>
-                    <span className="tabular-nums">{formatCount(reactionCounts[reaction.id])}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Match voting */}
-            <div className="space-y-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
-              <div className="flex items-center justify-between gap-2 text-[0.7rem]">
-                <span className="font-semibold text-primary">
-                  من سيفوز في المباراة؟
-                </span>
-                <span className="text-[0.65rem] text-muted-foreground">
-                  {totalVotes ? `${formatCount(totalVotes)} صوت` : "كن أول من يصوت"}
-                </span>
-              </div>
-
-              <div className="space-y-1.5 text-[0.7rem]">
-                <button
-                  type="button"
-                  onClick={(event) => handleVoteClick(event, "home")}
-                  className="flex w-full items-center gap-2 rounded-md bg-black/15 p-1.5 text-start transition hover:bg-primary/10"
-                >
-                  <span className="w-16 truncate font-semibold text-foreground">
-                    {match.homeTeam}
-                  </span>
-                  <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
-                    <div
-                      className={[
-                        "absolute inset-y-0 left-0 rounded-full bg-emerald-500 transition-[width]",
-                        "duration-500 ease-out",
-                      ].join(" ")}
-                      style={{ width: `${votePercentages.home}%` }}
-                    />
-                  </div>
-                  <span
-                    className={[
-                      "w-10 text-end tabular-nums",
-                      selectedVote === "home" ? "text-emerald-300" : "text-muted-foreground",
-                    ].join(" ")}
-                  >
-                    {votePercentages.home}%
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={(event) => handleVoteClick(event, "draw")}
-                  className="flex w-full items-center gap-2 rounded-md bg-black/15 p-1.5 text-start transition hover:bg-primary/10"
-                >
-                  <span className="w-16 truncate font-semibold text-foreground">
-                    تعادل
-                  </span>
-                  <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-sky-500 transition-[width] duration-500 ease-out"
-                      style={{ width: `${votePercentages.draw}%` }}
-                    />
-                  </div>
-                  <span
-                    className={[
-                      "w-10 text-end tabular-nums",
-                      selectedVote === "draw" ? "text-sky-300" : "text-muted-foreground",
-                    ].join(" ")}
-                  >
-                    {votePercentages.draw}%
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={(event) => handleVoteClick(event, "away")}
-                  className="flex w-full items-center gap-2 rounded-md bg-black/15 p-1.5 text-start transition hover:bg-primary/10"
-                >
-                  <span className="w-16 truncate font-semibold text-foreground">
-                    {match.awayTeam}
-                  </span>
-                  <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-black/40">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-amber-500 transition-[width] duration-500 ease-out"
-                      style={{ width: `${votePercentages.away}%` }}
-                    />
-                  </div>
-                  <span
-                    className={[
-                      "w-10 text-end tabular-nums",
-                      selectedVote === "away" ? "text-amber-300" : "text-muted-foreground",
-                    ].join(" ")}
-                  >
-                    {votePercentages.away}%
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Deep link to full match page */}
-            <div className="flex justify-end">
-              <Link
-                to={`/match/${match.id}`}
-                onClick={(event) => event.stopPropagation()}
-                className="inline-flex items-center gap-1 text-[0.7rem] font-semibold text-primary hover:underline"
-              >
-                <Play className="h-3.5 w-3.5" />
-                الذهاب إلى صفحة المباراة
-              </Link>
-            </div>
-          </motion.div>
-        )}
+        {/* Details removed for minimal experience */}
       </div>
     </motion.div>
   );

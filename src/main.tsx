@@ -3,8 +3,10 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./lib/global-error-guard";
+import { initAnalytics } from "./lib/analytics";
 
 try {
+  initAnalytics();
   const el = document.getElementById("root");
   if (el) {
     createRoot(el).render(<App />);

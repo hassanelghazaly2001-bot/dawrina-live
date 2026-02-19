@@ -45,6 +45,9 @@ const AdminDashboard = () => {
     active: false,
   });
   const [adRowEdits, setAdRowEdits] = useState<Record<string, { code_html?: string; ad_script?: string }>>({});
+  const [visitorsToday, setVisitorsToday] = useState(0);
+  const [referralCounts, setReferralCounts] = useState<Record<string, number>>({});
+  const [topMatchViews, setTopMatchViews] = useState<Array<{ path: string; count: number }>>([]);
   const PANDA_SLUGS = [
     ...Array.from({ length: 10 }, (_, i) => `bein-${i + 1}`),
     ...Array.from({ length: 8 }, (_, i) => `ssc-${i + 1}`),
@@ -167,6 +170,56 @@ const AdminDashboard = () => {
     return () => {
       mounted = false;
     };
+  }, [authed]);
+
+  useEffect(() => {
+    if (!authed) return;
+    (async () => {
+      try {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        const startISO = `${y}-${m}-${day}T00:00:00.000Z`;
+        const endISO = `${y}-${m}-${day}T23:59:59.999Z`;
+        const { data, error } = await supabase
+          .from("page_views")
+          .select("path,source,ts")
+          .gte("ts", startISO)
+          .lte("ts", endISO);
+        if (error || !Array.isArray(data)) {
+          setVisitorsToday(0);
+          setReferralCounts({});
+          setTopMatchViews([]);
+          return;
+        }
+        setVisitorsToday(data.length);
+        const refMap: Record<string, number> = {};
+        const matchMap: Record<string, number> = {};
+        for (const row of data as Array<{ path?: string; source?: string }>) {
+          const src = (row.source ?? "other") as string;
+          refMap[src] = (refMap[src] ?? 0) + 1;
+          const path = (row.path ?? "") as string;
+          if (path.startsWith("/match/")) {
+            matchMap[path] = (matchMap[path] ?? 0) + 1;
+          }
+        }
+        setReferralCounts(refMap);
+        const top = Object.entries(matchMap)
+          .map(([path, count]) => ({ path, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5);
+        setTopMatchViews(top);
+      } catch {
+        setVisitorsToday(0);
+        setReferralCounts({});
+        setTopMatchViews([]);
+      }
+    })().catch(() => {
+      setVisitorsToday(0);
+      setReferralCounts({});
+      setTopMatchViews([]);
+    });
   }, [authed]);
 
   useEffect(() => {
@@ -774,6 +827,45 @@ const AdminDashboard = () => {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">لوحة الإدارة</h2>
             <span className="text-xs text-muted-foreground">Feb 14, 2026</span>
+          </div>
+          <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <div className="rounded-md border bg-card p-3">
+              <div className="text-xs text-muted-foreground">زوار اليوم</div>
+              <div className="mt-1 text-2xl font-bold text-foreground">{visitorsToday}</div>
+            </div>
+            <div className="rounded-md border bg-card p-3">
+              <div className="text-xs text-muted-foreground">أفضل مصادر الزيارات</div>
+              <div className="mt-1 space-y-1 text-sm">
+                {Object.keys(referralCounts).length === 0 ? (
+                  <div className="text-muted-foreground">لا بيانات</div>
+                ) : (
+                  Object.entries(referralCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 5)
+                    .map(([src, cnt]) => (
+                      <div key={src} className="flex items-center justify-between">
+                        <span className="text-muted-foreground">{src}</span>
+                        <span className="font-semibold text-foreground">{cnt}</span>
+                      </div>
+                    ))
+                )}
+              </div>
+            </div>
+            <div className="rounded-md border bg-card p-3">
+              <div className="text-xs text-muted-foreground">أكثر المباريات زيارة اليوم</div>
+              <div className="mt-1 space-y-1 text-sm">
+                {topMatchViews.length === 0 ? (
+                  <div className="text-muted-foreground">لا بيانات</div>
+                ) : (
+                  topMatchViews.map((mv) => (
+                    <div key={mv.path} className="flex items-center justify-between">
+                      <span className="text-muted-foreground">{mv.path}</span>
+                      <span className="font-semibold text-foreground">{mv.count}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
           {autoStatus && <p className="mb-3 text-xs text-muted-foreground">{autoStatus}</p>}
           <div className="mb-4 flex items-center gap-2">

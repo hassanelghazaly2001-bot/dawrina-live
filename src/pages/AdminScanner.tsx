@@ -192,7 +192,7 @@ const AdminScanner = () => {
                       height="100%"
                       allow="autoplay; fullscreen"
                       referrerPolicy="strict-origin-when-cross-origin"
-                      sandbox="allow-forms allow-same-origin allow-scripts"
+                      sandbox="allow-forms allow-scripts"
                     />
                   </div>
                 </div>
@@ -275,7 +275,7 @@ const AdminScanner = () => {
                       void 0;
                     }
                   }}
-                  sandbox="allow-forms allow-same-origin allow-scripts"
+                    sandbox="allow-forms allow-scripts"
                   referrerPolicy="strict-origin-when-cross-origin"
                 />
               ))}

@@ -68,9 +68,9 @@ const MatchPage = () => {
 
   function buildStartISO(m: Match | null): string | undefined {
     if (!m) return undefined;
-    const dateStr = (m.date && m.date.trim().length > 0) ? m.date.trim() : new Date().toISOString().slice(0, 10);
-    const timeStr = (m.time && m.time.trim().length >= 4) ? m.time.trim() : "00:00";
-    const d = new Date(`${dateStr}T${timeStr}:00`);
+    const today = new Date().toISOString().split("T")[0];
+    const hasTime = !!(m.time && m.time.trim().length >= 4);
+    const d = hasTime ? new Date(`${today}T${m.time!.trim()}`) : new Date();
     if (isNaN(d.getTime())) return undefined;
     return d.toISOString();
   }
@@ -253,7 +253,7 @@ const MatchPage = () => {
                 height="100%"
                 allow="autoplay; fullscreen"
                 referrerPolicy="strict-origin-when-cross-origin"
-                sandbox="allow-forms allow-same-origin allow-scripts"
+                sandbox="allow-forms allow-scripts"
               />
               <div className="pointer-events-none absolute left-3 right-24 bottom-3 z-[9999]">
                 <div className="w-full rounded-md bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white">

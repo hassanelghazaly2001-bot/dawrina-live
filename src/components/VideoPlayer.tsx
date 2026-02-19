@@ -247,7 +247,7 @@ const VideoPlayer = ({ streamUrls, initialIndex = 0, className, fetchFromSupabas
             height="100%"
             allow="autoplay; fullscreen"
             referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-forms allow-scripts allow-pointer-lock allow-same-origin allow-top-navigation"
+            sandbox="allow-forms allow-scripts allow-pointer-lock allow-top-navigation"
           />
         )}
         {hasError && (

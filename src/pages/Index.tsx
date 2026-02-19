@@ -44,6 +44,20 @@ const Index = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [matchesCount, setMatchesCount] = useState<number>(0);
   useEffect(() => {
+    const title =
+      "دورينا | بث مباشر مباريات اليوم - مشاهدة أهم مباريات اليوم جوال";
+    const desc =
+      "تابع نتائج ومباريات اليوم بث مباشر عبر موقع دورينا. تغطية حصرية لجميع الدوريات والبطولات العالمية والعربية بجودة عالية.";
+    document.title = title;
+    let meta = document.querySelector("meta[name='description']") as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.setAttribute("name", "description");
+      document.head.appendChild(meta);
+    }
+    meta.setAttribute("content", desc);
+  }, []);
+  useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("ads")

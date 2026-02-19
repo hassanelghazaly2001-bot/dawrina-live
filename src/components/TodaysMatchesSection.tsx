@@ -393,6 +393,61 @@ export function TodaysMatchesSection() {
 
   const countdown = useCountdown(bigMatchDate);
 
+  useEffect(() => {
+    const baseUrl =
+      typeof window !== "undefined" && window.location?.origin
+        ? window.location.origin
+        : "https://your-preview-url.vercel.app";
+    const imageUrl = `${baseUrl}/logo.png`;
+    const safeStartISO = (m: Match): string | undefined => {
+      const today = new Date().toISOString().split("T")[0];
+      if (m.time && /^\d{1,2}:\d{2}$/.test(m.time.trim())) {
+        const d = new Date(`${today}T${m.time.trim()}`);
+        if (!isNaN(d.getTime())) return d.toISOString();
+      }
+      const off = (m.date ?? "").toLowerCase() === "tomorrow" ? 1 : 0;
+      const d2 = getMatchDate(m, off);
+      return d2 ? d2.toISOString() : undefined;
+    };
+    const items = (matches ?? []).map((m, idx) => {
+      const url = `${baseUrl}/match/${encodeURIComponent(m.id)}`;
+      const name = [m.homeTeam, m.awayTeam].filter(Boolean).join(" vs ");
+      const schemaEvent = {
+        "@type": "SportsEvent",
+        "@id": url,
+        name: name || (m.league || "Match"),
+        startDate: safeStartISO(m),
+        location: m.stadium ? { "@type": "Place", name: m.stadium } : undefined,
+        image: imageUrl,
+        url,
+      };
+      return {
+        "@type": "ListItem",
+        position: idx + 1,
+        url,
+        item: schemaEvent,
+      };
+    });
+    const itemList = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "@id": `${baseUrl}/#home-itemlist`,
+      itemListElement: items,
+    };
+    let script = document.getElementById("home-itemlist") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.id = "home-itemlist";
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(itemList);
+    return () => {
+      const s = document.getElementById("home-itemlist");
+      if (s && s.parentNode) s.parentNode.removeChild(s);
+    };
+  }, [matches]);
+
   return (
     <section className="space-y-8" dir="rtl">
 

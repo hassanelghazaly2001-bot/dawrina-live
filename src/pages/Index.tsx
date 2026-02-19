@@ -115,9 +115,6 @@ const Index = () => {
       <header className="relative border border-amber-400/40 bg-black/40 shadow-xl shadow-black/40 backdrop-blur-md">
         <div className="container py-5">
           <div className="flex items-center justify-center">
-            <BrandLogo className="h-12 sm:h-16" showText />
-          </div>
-          <div className="flex items-center justify-center">
             <InstallAppButton variant="inline" />
           </div>
         </div>

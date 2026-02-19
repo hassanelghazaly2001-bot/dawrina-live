@@ -9,6 +9,7 @@ import { FeaturedMatchCard } from "@/components/FeaturedMatchCard";
   import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
+import { InstallAppButton } from "@/components/pwa/InstallAppButton";
 
 function AdScriptRenderer({ html }: { html: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -509,8 +510,8 @@ export function TodaysMatchesSection() {
 
       {!isLoading && !isError && matches.length > 0 && (
         <div className="relative">
-          <div className="flex items-center justify-center mb-6">
-            <BrandLogo className="h-12 sm:h-16" showText />
+          <div className="flex items-center justify-center mb-4">
+            <InstallAppButton variant="inline" />
           </div>
           {bigMatch && (
             <FeaturedMatchCard

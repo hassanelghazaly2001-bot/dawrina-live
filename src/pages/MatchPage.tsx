@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchFixturesForLeagues } from "@/services/footballService";
 import type { Match } from "@/data/matches";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Bell } from "lucide-react";
@@ -24,10 +23,41 @@ const MatchPage = () => {
 
   React.useEffect(() => {
     let mounted = true;
-    void fetchFixturesForLeagues()
-      .then((arr) => {
+    void supabase
+      .from("matches")
+      .select("*")
+      .eq("id", id)
+      .single()
+      .then((res) => {
         if (!mounted) return;
-        const m = arr.find((mm) => mm.id === id) ?? null;
+        const row = res.data as { [k: string]: unknown } | null;
+        if (!row) {
+          setMatch(null);
+          return;
+        }
+        const m: Match = {
+          id: String(row.id ?? id),
+          homeTeam: String(row.home_team ?? ""),
+          awayTeam: String(row.away_team ?? ""),
+          homeLogo: row.home_logo ? String(row.home_logo) : undefined,
+          awayLogo: row.away_logo ? String(row.away_logo) : undefined,
+          league: String(row.league ?? ""),
+          leagueIcon: row.league_icon ? String(row.league_icon) : undefined,
+          date: String(row.date ?? ""),
+          time: String(row.time ?? ""),
+          status: (String(row.status ?? "upcoming") as "live" | "upcoming" | "finished"),
+          streamUrl: String(row.stream_server_1 ?? "") || "",
+          streamUrl2: String(row.stream_server_2 ?? "") || "",
+          channelSlug: row.channel_slug ? String(row.channel_slug) : undefined,
+          channel: row.channel ? String(row.channel) : undefined,
+          backupIframe: row.backup_iframe ? String(row.backup_iframe) : undefined,
+          playerServer: (row.player_server ? String(row.player_server) : undefined) as
+            | "panda"
+            | "starz"
+            | undefined,
+          commentator: row.commentator ? String(row.commentator) : undefined,
+          stadium: row.stadium ? String(row.stadium) : undefined,
+        };
         setMatch(m);
       })
       .catch(() => void 0);
@@ -35,6 +65,15 @@ const MatchPage = () => {
       mounted = false;
     };
   }, [id]);
+
+  function buildStartISO(m: Match | null): string | undefined {
+    if (!m) return undefined;
+    const dateStr = (m.date && m.date.trim().length > 0) ? m.date.trim() : new Date().toISOString().slice(0, 10);
+    const timeStr = (m.time && m.time.trim().length >= 4) ? m.time.trim() : "00:00";
+    const d = new Date(`${dateStr}T${timeStr}:00`);
+    if (isNaN(d.getTime())) return undefined;
+    return d.toISOString();
+  }
 
   React.useEffect(() => {
     if (!match) return;
@@ -88,8 +127,7 @@ const MatchPage = () => {
       live: "EventInProgress",
       finished: "EventCompleted",
     };
-    const startDateISO =
-      match.date && match.time ? new Date(`${match.date}T${match.time}:00`).toISOString() : undefined;
+    const startDateISO = buildStartISO(match);
     const ld = {
       "@context": "https://schema.org",
       "@type": "SportsEvent",

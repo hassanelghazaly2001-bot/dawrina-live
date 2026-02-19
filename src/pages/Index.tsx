@@ -117,8 +117,10 @@ const Index = () => {
           <div className="flex items-center justify-center">
             <BrandLogo className="h-12 sm:h-16" showText />
           </div>
+          <div className="flex items-center justify-center">
+            <InstallAppButton variant="inline" />
+          </div>
         </div>
-        <InstallAppButton />
       </header>
 
       {/* Main */}

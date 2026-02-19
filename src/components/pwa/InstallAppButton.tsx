@@ -5,7 +5,13 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
 };
 
-export const InstallAppButton = () => {
+export const InstallAppButton = ({
+  variant = "floating",
+  className = "",
+}: {
+  variant?: "floating" | "inline";
+  className?: string;
+}) => {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOSGuide, setIsIOSGuide] = useState(false);
   const isMobile = typeof navigator !== "undefined" && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -40,6 +46,24 @@ export const InstallAppButton = () => {
   }
 
   if (!isMobile) return null;
+  if (variant === "inline") {
+    return (
+      <div className={["sm:hidden mt-2 flex items-center justify-center", className].join(" ")}>
+        <button
+          type="button"
+          onClick={onClick}
+          className="inline-flex items-center rounded-full border border-amber-400 bg-black/40 px-3 py-1 text-xs font-bold text-amber-200 hover:bg-black/60"
+        >
+          حمل التطبيق
+        </button>
+        {isIOSGuide && (
+          <div className="ml-2 rounded-md border border-border bg-card/80 px-2 py-1 text-[11px] text-muted-foreground shadow-lg">
+            iOS: مشاركة → أضف للشاشة الرئيسية
+          </div>
+        )}
+      </div>
+    );
+  }
   return (
     <div className="absolute left-3 top-3 sm:hidden">
       <button
@@ -47,7 +71,7 @@ export const InstallAppButton = () => {
         onClick={onClick}
         className="inline-flex items-center rounded-full border border-yellow-400 bg-black/40 px-3 py-1 text-xs font-bold text-yellow-300 shadow-[0_0_10px_rgba(255,215,0,0.6)] hover:bg-black/60"
       >
-        تثبيت التطبيق
+        حمل التطبيق
         <span className="ml-1 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-300" aria-hidden />
       </button>
       {isIOSGuide && (

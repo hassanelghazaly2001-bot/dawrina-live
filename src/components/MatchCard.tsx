@@ -24,6 +24,17 @@ const REACTION_CONFIG: { id: ReactionType; label: string; emoji: string }[] = [
 
 export function MatchCard({ match }: MatchCardProps) {
   const { channel, stadium, commentator } = match;
+  function formatCount(n: number): string {
+    if (n >= 1_000_000) {
+      const v = Math.round((n / 1_000_000) * 10) / 10;
+      return `${v}M`;
+    }
+    if (n >= 1_000) {
+      const v = Math.round((n / 1_000) * 10) / 10;
+      return `${v}k`;
+    }
+    return String(n);
+  }
   function adjustedTimeStr(raw: string): string {
     const parts = raw?.split(":") ?? [];
     const h = Number.parseInt(parts[0] ?? "", 10);
@@ -187,16 +198,22 @@ export function MatchCard({ match }: MatchCardProps) {
           wow: (data as { react_wow?: number }).react_wow ?? 0,
         });
       } else {
-        const baseVotes = Math.floor(Math.random() * (4000 - 1500 + 1)) + 1500;
-        const wHome = 0.35 + Math.random() * 0.2;
-        const wAway = 0.35 + Math.random() * 0.2;
-        const wDraw = 1 - wHome - wAway;
+        const baseVotes = Math.floor(Math.random() * (15000 - 5000 + 1)) + 5000;
+        const pHomeBase = 0.55;
+        const pAwayBase = 0.30;
+        const pDrawBase = 0.15;
+        const jitter = () => (Math.random() - 0.5) * 0.06;
+        let wHome = pHomeBase + jitter();
+        let wAway = pAwayBase + jitter();
+        let wDraw = pDrawBase + jitter();
+        const sum = wHome + wAway + wDraw;
+        wHome /= sum; wAway /= sum; wDraw /= sum;
         const vHome = Math.max(0, Math.round(baseVotes * wHome));
         const vAway = Math.max(0, Math.round(baseVotes * wAway));
         const vDraw = Math.max(0, baseVotes - vHome - vAway);
-        const rFire = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
-        const rClap = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
-        const rWow = Math.floor(Math.random() * (600 - 100 + 1)) + 100;
+        const rFire = Math.floor(Math.random() * (1600 - 800 + 1)) + 800;
+        const rClap = Math.floor(Math.random() * (1000 - 500 + 1)) + 500;
+        const rWow = Math.floor(Math.random() * (700 - 300 + 1)) + 300;
         setVoteCounts({ home: vHome, draw: vDraw, away: vAway });
         setReactionCounts({ fire: rFire, clap: rClap, wow: rWow });
         await supabase
@@ -401,7 +418,7 @@ export function MatchCard({ match }: MatchCardProps) {
                     ].join(" ")}
                   >
                     <span>{reaction.emoji}</span>
-                    <span className="tabular-nums">{reactionCounts[reaction.id]}</span>
+                    <span className="tabular-nums">{formatCount(reactionCounts[reaction.id])}</span>
                   </button>
                 ))}
               </div>
@@ -414,7 +431,7 @@ export function MatchCard({ match }: MatchCardProps) {
                   من سيفوز في المباراة؟
                 </span>
                 <span className="text-[0.65rem] text-muted-foreground">
-                  {totalVotes ? `${totalVotes} صوت` : "كن أول من يصوت"}
+                  {totalVotes ? `${formatCount(totalVotes)} صوت` : "كن أول من يصوت"}
                 </span>
               </div>
 

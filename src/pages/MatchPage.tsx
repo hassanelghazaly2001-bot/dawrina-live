@@ -5,6 +5,7 @@ import VideoPlayer from "@/components/VideoPlayer";
 import { Bell } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/components/Footer";
+import "@/lib/safe-share-modal";
 
 const MatchPage = () => {
   const params = useParams();

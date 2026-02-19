@@ -1,4 +1,15 @@
 try {
+  const path = (() => {
+    try {
+      return window.location.pathname || "";
+    } catch {
+      return "";
+    }
+  })();
+  if (!path.startsWith("/match") || path.includes("/admin")) {
+    // Only run on Match Details pages; skip Admin or other routes
+    throw new Error("Skip share modal on this route");
+  }
   function init() {
     const shareBtn = document.getElementById("share-btn");
     const shareDialog = document.getElementById("share-modal");

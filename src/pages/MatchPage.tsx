@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { fetchFixturesForLeagues } from "@/services/footballService";
 import type { Match } from "@/data/matches";
 import VideoPlayer from "@/components/VideoPlayer";
+import Footer from "@/components/Footer";
 
 const MatchPage = () => {
   const params = useParams();
@@ -66,7 +67,7 @@ const MatchPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm">
         <div className="container flex items-center gap-4 py-4">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">الرجوع</Link>
@@ -74,7 +75,7 @@ const MatchPage = () => {
           <span className="text-sm text-muted-foreground">{match?.league ?? "المباراة"}</span>
         </div>
       </header>
-      <main className="container py-6">
+      <main className="container py-6 flex-1">
         <div className="mx-auto max-w-3xl">
           {iframeSrc ? (
             <div className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black/60 shadow-xl backdrop-blur-md">
@@ -132,6 +133,7 @@ const MatchPage = () => {
           )}
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import MatchPage from "./pages/MatchPage";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import Contact from "./pages/Contact";
+import Disclaimer from "./pages/Disclaimer";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/match/:id" element={<MatchPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/disclaimer" element={<Disclaimer />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

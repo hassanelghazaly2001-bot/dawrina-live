@@ -3,6 +3,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { supabase } from "@/lib/supabase";
 import { useEffect, useRef, useState } from "react";
 import { fetchFixturesForLeagues } from "@/services/footballService";
+import Footer from "@/components/Footer";
 
 type Ad = {
   id: string;
@@ -90,7 +91,7 @@ const Index = () => {
     return null;
   }
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <h1 className="text-xs text-muted-foreground ps-2">Matches count: {matchesCount}</h1>
       {ads.filter((a) => a.placement === "header").map((a) => (
         <div key={a.id} className="border-b border-border bg-card/40 py-2">{renderAd(a)}</div>
@@ -121,12 +122,13 @@ const Index = () => {
       </header>
 
       {/* Main */}
-      <main className="container max-w-6xl mx-auto py-10">
+      <main className="container max-w-6xl mx-auto py-10 flex-1">
         <TodaysMatchesSection />
         {ads.filter((a) => a.placement === "inline").map((a) => (
           <div key={a.id} className="my-6 rounded-xl border border-border bg-card/40 p-4">{renderAd(a)}</div>
         ))}
       </main>
+      <Footer />
     </div>
   );
 };

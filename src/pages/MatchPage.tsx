@@ -36,6 +36,90 @@ const MatchPage = () => {
     };
   }, [id]);
 
+  React.useEffect(() => {
+    if (!match) return;
+    const urlHere = (() => {
+      try {
+        return window.location.href;
+      } catch {
+        return `https://dourina.com/match/${id}`;
+      }
+    })();
+    const home = match.homeTeam ?? "";
+    const away = match.awayTeam ?? "";
+    const league = match.league ?? "";
+    const name = [home, away].filter(Boolean).join(" vs ");
+    const isArabic = true;
+    const title =
+      isArabic && home && away
+        ? `${home} ضد ${away} بث مباشر | ${league} | دورينا`
+        : `${name || league} Live Stream | DAWRINA`;
+    const desc =
+      isArabic && home && away
+        ? `شاهد ${home} ضد ${away} بث مباشر الآن على دورينا — موعد مباراة ${league} وروابط البث بجودة عالية.`
+        : `Watch ${name} live now on DAWRINA — match time, league and links.`;
+    const keywords = [
+      "بث مباشر",
+      "موعد مباراة",
+      "يلا شوت",
+      home,
+      away,
+      league,
+      "live stream",
+      "match today",
+      "dawrina",
+    ]
+      .filter(Boolean)
+      .join(", ");
+    document.title = title;
+    function setMeta(name: string, content: string) {
+      let el = document.querySelector(`meta[name='${name}']`) as HTMLMetaElement | null;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute("name", name);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", content);
+    }
+    setMeta("description", desc);
+    setMeta("keywords", keywords);
+    const statusMap: Record<NonNullable<Match["status"]>, string> = {
+      upcoming: "EventScheduled",
+      live: "EventInProgress",
+      finished: "EventCompleted",
+    };
+    const startDateISO =
+      match.date && match.time ? new Date(`${match.date}T${match.time}:00`).toISOString() : undefined;
+    const ld = {
+      "@context": "https://schema.org",
+      "@type": "SportsEvent",
+      name: `${home} vs ${away}`.trim() || league || "Match",
+      startDate: startDateISO,
+      eventStatus: statusMap[match.status ?? "upcoming"],
+      location: match.stadium
+        ? { "@type": "Place", name: match.stadium }
+        : undefined,
+      competitor: [
+        { "@type": "SportsTeam", name: home || "Home Team" },
+        { "@type": "SportsTeam", name: away || "Away Team" },
+      ],
+      url: urlHere,
+    };
+    let script = document.getElementById("seo-sportsevent") as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.id = "seo-sportsevent";
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(ld);
+    return () => {
+      // keep title; remove JSON-LD to avoid stale data when navigating
+      const s = document.getElementById("seo-sportsevent");
+      if (s && s.parentNode) s.parentNode.removeChild(s);
+    };
+  }, [match, id]);
+
   function currentUrl(): string {
     try {
       return window.location.href;
